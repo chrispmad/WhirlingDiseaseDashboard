@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+app/www/*
+app/rsconnect/*
+data/*
+*.Rproj
+test_app.R
