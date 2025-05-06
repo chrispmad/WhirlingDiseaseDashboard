@@ -14,16 +14,16 @@ onedrive_wd = paste0(str_extract(getwd(),"C:/Users/[A-Z]+/"),"OneDrive - Governm
 # intended to save us from overwriting the local data with some garbage 
 # LAN file that has replaced our goldenboy data file.
 new_potential_dat_file = read_excel(paste0(lan_folder,"2 SCIENCE - Invasives/SPECIES/Whirling Disease/Monitoring/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx"), sheet = "eDNA")
-local_data_file = read_excel('data/WD sampling results_fish_eDNA_MASTER LIST.xlsx', sheet = "eDNA")
+local_data_file = read_excel('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx')
 
 if(identical(names(new_potential_dat_file),names(local_data_file)) & nrow(new_potential_dat_file) == nrow(local_data_file)){
   print("New data file has identical column names and number of rows. Copying locally...")
   file.copy(from = paste0(lan_folder,"2 SCIENCE - Invasives/SPECIES/Whirling Disease/Monitoring/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx"),
-            to = paste0('data/WD sampling results_fish_eDNA_MASTER LIST.xlsx'),
+            to = paste0('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx'),
             overwrite = T)
 }
 
-dat = read_excel('data/WD sampling results_fish_eDNA_MASTER LIST.xlsx', sheet = "eDNA")
+dat = read_excel('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx', sheet = "eDNA")
 
 dat = purrr::set_names(dat, snakecase::to_snake_case)
 

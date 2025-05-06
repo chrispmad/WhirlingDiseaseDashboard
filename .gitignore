@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-app/www/*
+app/www/*.gpkg
 app/rsconnect/*
 data/*
 *.Rproj
