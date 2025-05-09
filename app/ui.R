@@ -42,7 +42,13 @@ ui <- page_navbar(
   theme = bs_theme(bootswatch = "flatly", version = 5),
   shiny::includeCSS("www/my_styles.css"),
   title = h5("Whirling Disease Dashboard"),
-  bslib::nav_item(h5("Data Updated on ",Sys.Date(),class="data-update-text")),
+  bslib::nav_item(
+    div(
+      shiny::downloadButton(outputId = 'data_dl', label = "Download Data", class = 'download-data-btn'),
+      p("Data Updated on ",Sys.Date()),
+      class="data-update-text"
+      )
+  ),
   # sidebar = the_sidebar,
   leaflet_card
 )

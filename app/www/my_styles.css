@@ -10,5 +10,15 @@
   position: absolute;
   top: 1rem;
   right: 1rem;
+  color: white;
+  text-align: center;
   font-size: medium;
+}
+
+.download-data-btn {
+  background: #48999e;
+}
+
+.download-data-btn:hover {
+  background: #264d4f;
 }

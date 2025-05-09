@@ -12,4 +12,5 @@ server <- function(input, output, session) {
   
   source('utils/leaflet_logic.R', local = T)
   
+  source('utils/data_download.R', local = T)
 }
