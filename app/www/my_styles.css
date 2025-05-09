@@ -1,0 +1,14 @@
+.red-square {
+  background: #ff000080;
+}
+
+.blue-square {
+  background: #3498db80;
+}
+
+.data-update-text {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: medium;
+}

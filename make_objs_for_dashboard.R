@@ -13,7 +13,7 @@ onedrive_wd = paste0(str_extract(getwd(),"C:/Users/[A-Z]+/"),"OneDrive - Governm
 # Copy excel results from LAN folder IF it has all the right columns. This is
 # intended to save us from overwriting the local data with some garbage 
 # LAN file that has replaced our goldenboy data file.
-new_potential_dat_file = read_excel(paste0(lan_folder,"2 SCIENCE - Invasives/SPECIES/Whirling Disease/Monitoring/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx"), sheet = "eDNA")
+new_potential_dat_file = read_excel(paste0(lan_folder,"2 SCIENCE - Invasives/SPECIES/Whirling Disease/Monitoring/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx"), sheet = "Fish and eDNA")
 local_data_file = read_excel('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx')
 
 if(identical(names(new_potential_dat_file),names(local_data_file)) & nrow(new_potential_dat_file) == nrow(local_data_file)){
@@ -23,7 +23,7 @@ if(identical(names(new_potential_dat_file),names(local_data_file)) & nrow(new_po
             overwrite = T)
 }
 
-dat = read_excel('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx', sheet = "eDNA")
+dat = read_excel('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSEN.xlsx', sheet = "Fish and eDNA")
 
 dat = purrr::set_names(dat, snakecase::to_snake_case)
 
@@ -34,6 +34,11 @@ dat = dat |>
   tidyr::separate_longer_delim(cols = sampling_method, delim = " + ")
 
 dat = sf::st_as_sf(dat, coords = c("long","lat"), crs = 4326)
+
+# Typo corrections etc.
+dat = dat |> 
+  dplyr::mutate(fish_sampling_results_q_pcr_mc_detected = ifelse(str_detect(fish_sampling_results_q_pcr_mc_detected,"Positive"),"Positive",fish_sampling_results_q_pcr_mc_detected)) |> 
+  dplyr::mutate(comments = ifelse(comments == '', NA, comments))
 
 sf::write_sf(dat, 'app/www/sampling_results.gpkg')
 

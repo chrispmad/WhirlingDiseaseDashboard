@@ -3,43 +3,28 @@ col = sf::read_sf("columbia_watershed.gpkg")
 subw = sf::read_sf("subwatershed_groups.gpkg")
 
 # Remove sites that weren't sampled.
-dat = dat |> dplyr::filter(sampled_in_2024_y_n == "Y")
+dat = dat |> dplyr::filter(stringr::str_detect(sampled_in_2024_y_n, "^Y"))
 
-# Combine some fish species levels that I assume are the same:
+# # Drop rows where sample result is NA for eDNA and fish
+# dat = dat |> dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected)))
+# Replace true NA with 'NA' for rows with NO results but that claim to have been sampled. 
+dat_no_results = dat |> 
+  dplyr::filter((is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) |> 
+  dplyr::mutate(e_dna_results_mc = "NA",
+                e_dna_results_tubifex = "NA",
+                fish_sampling_results_q_pcr_mc_detected = "NA")
+
 dat = dat |> 
-  dplyr::mutate(fish_species_sampled = dplyr::case_when(
-    fish_species_sampled == "KO" ~ "KOK",
-    fish_species_sampled == "RB" ~ "RBT",
-    T ~ fish_species_sampled
-  ))
+  dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) |> 
+  dplyr::bind_rows(dat_no_results)
 
-# Drop rows where sample result is NA for both eDNA and fish
-dat = dat |> dplyr::filter(!(is.na(e_dna_results_mc_detection) & is.na(fish_sampling_results_q_pcr_mc_detected)))
+rm(dat_no_results)
 
 # Temporary correction to highlight NAs in dataset:
 dat = dat |> mutate(sampling_method = tidyr::replace_na(sampling_method, "NA"))
 
-# Split sampling results at commas into separate rows.
-dat = dat |>
-  tidyr::separate_longer_delim(cols = sampling_method, delim = ' + ')
-
-# Also, replace NAs in eDNA results with 'pending', if the sampled in 2024 column
-# says yes.
-dat = dat |> 
-  dplyr::mutate(e_dna_results_mc_detection = dplyr::case_when(
-    sampled_in_2024_y_n == "Y" & sampling_method == 'eDNA' & is.na(e_dna_results_mc_detection) ~ "Pending",
-    T ~ e_dna_results_mc_detection
-  ))
-
 # Relabel the geometry column.
 dat = sf::st_set_geometry(dat, "geom")
-# Remove extra text in sampling results.
-dat = dat |> 
-  dplyr::mutate(fish_sampling_results_q_pcr_mc_detected = stringr::str_remove(fish_sampling_results_q_pcr_mc_detected," \\(.*")) |> 
-  dplyr::mutate(fish_sampling_results_q_pcr_mc_detected = stringr::str_to_title(fish_sampling_results_q_pcr_mc_detected)) |> 
-  dplyr::mutate(fish_sampling_results_q_pcr_mc_detected = tidyr::replace_na(fish_sampling_results_q_pcr_mc_detected, "NA")) |> 
-  dplyr::mutate(e_dna_results_mc_detection = stringr::str_to_title(e_dna_results_mc_detection),
-                e_dna_results_mc_detection = tidyr::replace_na(e_dna_results_mc_detection,"NA"))
 
 # Assign a colour based on sampling type, and also a colour based on test result.
 dat = dat |> 
@@ -56,8 +41,8 @@ dat = dat |>
     T ~ 'black'
   )) |> 
   dplyr::mutate(edna_results_colour = dplyr::case_when(
-    e_dna_results_mc_detection == "Not Detected" ~ 'lightblue',
-    e_dna_results_mc_detection == "Weak Detection" ~ 'orange',
-    e_dna_results_mc_detection == "Pending" ~ 'pink',
+    e_dna_results_mc == "Not Detected" ~ 'lightblue',
+    e_dna_results_mc == "Weak Detection" ~ 'orange',
+    e_dna_results_mc == "Pending" ~ 'pink',
     T ~ 'black'
   ))
