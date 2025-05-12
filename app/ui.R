@@ -45,7 +45,7 @@ ui <- page_navbar(
   bslib::nav_item(
     div(
       shiny::downloadButton(outputId = 'data_dl', label = "Download Data", class = 'download-data-btn'),
-      p("Data Updated on ",Sys.Date()),
+      p(textOutput('file_update_date')),
       class="data-update-text"
       )
   ),

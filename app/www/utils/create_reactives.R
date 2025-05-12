@@ -37,6 +37,10 @@
 #   out |> leafpop::popupTable()
 # })
 
+output$file_update_date = renderText({
+  paste0("Data Updated on ",format(as.Date(file.info('sampling_results.gpkg')$mtime),format='%Y-%b-%d'))
+})
+
 leaflet_tables = dat |> 
   sf::st_drop_geometry() |> 
   dplyr::select(sample_site_name,
