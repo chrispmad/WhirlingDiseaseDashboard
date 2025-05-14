@@ -40,6 +40,7 @@ dat = dat |>
   dplyr::mutate(fish_sampling_results_q_pcr_mc_detected = ifelse(str_detect(fish_sampling_results_q_pcr_mc_detected,"Positive"),"Positive",fish_sampling_results_q_pcr_mc_detected)) |> 
   dplyr::mutate(comments = ifelse(comments == '', NA, comments))
 
+if(file.exists('app/www/sampling_results.gpkg')) file.remove('app/www/sampling_results.gpkg')
 sf::write_sf(dat, 'app/www/sampling_results.gpkg')
 
 # --------------------------

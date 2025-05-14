@@ -1,9 +1,42 @@
+# dat = sf::read_sf("app/www/sampling_results.gpkg")
+# col = sf::read_sf("app/www/columbia_watershed.gpkg")
+# subw = sf::read_sf("app/www/subwatershed_groups.gpkg")
 dat = sf::read_sf("sampling_results.gpkg")
 col = sf::read_sf("columbia_watershed.gpkg")
 subw = sf::read_sf("subwatershed_groups.gpkg")
 
 # Remove sites that weren't sampled.
 dat = dat |> dplyr::filter(stringr::str_detect(sampled_in_2024_y_n, "^Y"))
+
+# Merge two rows for Kootenay Lake. Martina may want this changed in the 
+# future.
+kootenay_results = as.numeric(dat[dat$sample_site_name == "Kootenay Lake",]$number_of_fish_sampled)
+dat[dat$sample_site_name == "Kootenay Lake",]$number_of_fish_sampled = as.character(sum(kootenay_results))
+dat[dat$sample_site_name == "Kootenay Lake",]$region = "Kootenay"
+dat[dat$sample_site_name == "Kootenay Lake",]$delivery_agency = "WLRS"
+dat[dat$sample_site_name == "Kootenay Lake",]$funding_sources = "LBIS"
+
+dat = dat[-which(dat$sample_site_name == 'Kootenay Lake')[2],]
+
+# Convert levels for eDNA to 'Positive' and 'Negative'
+# unique(dat$e_dna_results_mc)
+# unique(dat$e_dna_results_tubifex)
+# unique(dat$fish_sampling_results_q_pcr_mc_detected)
+dat = dat |> 
+  dplyr::mutate(e_dna_results_mc = dplyr::case_when(
+    e_dna_results_mc == "Not Detected" ~ "Negative",
+    !is.na(e_dna_results_mc) ~ "Positive",
+    T ~ NA
+  )) |> 
+  dplyr::mutate(e_dna_results_tubifex = dplyr::case_when(
+    e_dna_results_tubifex == "Not Detected" ~ "Negative",
+    !is.na(e_dna_results_tubifex) ~ "Positive",
+    T ~ NA
+  ))
+
+# unique(dat$e_dna_results_mc)
+# unique(dat$e_dna_results_tubifex)
+# unique(dat$fish_sampling_results_q_pcr_mc_detected)
 
 # # Drop rows where sample result is NA for eDNA and fish
 # dat = dat |> dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected)))
@@ -15,8 +48,8 @@ dat_no_results = dat |>
                 fish_sampling_results_q_pcr_mc_detected = "NA")
 
 dat = dat |> 
-  dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) |> 
-  dplyr::bind_rows(dat_no_results)
+  dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) #|> 
+  # dplyr::bind_rows(dat_no_results)
 
 rm(dat_no_results)
 
@@ -41,8 +74,8 @@ dat = dat |>
     T ~ 'black'
   )) |> 
   dplyr::mutate(edna_results_colour = dplyr::case_when(
-    e_dna_results_mc == "Not Detected" ~ 'lightblue',
-    e_dna_results_mc == "Weak Detection" ~ 'orange',
+    e_dna_results_mc == "Negative" ~ 'purple',
+    e_dna_results_mc == "Positive" ~ 'orange',
     e_dna_results_mc == "Pending" ~ 'pink',
     T ~ 'black'
   ))

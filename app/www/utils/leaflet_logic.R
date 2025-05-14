@@ -1,13 +1,16 @@
 make_leaf_tbl = function(dat){
   dat |> 
+    dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
+                  Longitude = sf::st_coordinates(geom)[,1]) |> 
     sf::st_drop_geometry() |> 
     dplyr::select(`Sample Site` = sample_site_name,
-                  `Sampled in 2024` = sampled_in_2024_y_n,
+                  Latitude,
+                  Longitude,
                   `Sampling Method` = sampling_method,
                   `Fish Species Sampled` = fish_species_sampled,
                   `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-                  `eDNA Sampling Results (Mc)` = e_dna_results_mc,
-                  `eDNA Sampling Results (Tubifex)` = e_dna_results_tubifex) |> 
+                  `eDNA Sampling Results (parasite - Myxobolus cerebralis)` = e_dna_results_mc,
+                  `eDNA Sampling Results (Freshwater tubifex worm)` = e_dna_results_tubifex) |> 
     leafpop::popupTable()
 }
 
@@ -21,12 +24,36 @@ fish_neg = leaflet::makeIcon(iconUrl = "https://cdn-icons-png.flaticon.com/512/1
                              iconAnchorX = 12, iconAnchorY = 12,
                              className = 'blue-square')
 
-legend_html <- HTML(
+fish_legend_html <- HTML(
   paste0(
     "<div style='background: #ffffff00; padding: 0px; border-radius: 5px;'>
      <strong>Fish Results</strong>
-     <li><img src='https://cdn-icons-png.flaticon.com/512/15735/15735559.png' height='24' style='vertical-align:middle;' class = 'red-square'> Positive
-     <li><img src='https://cdn-icons-png.flaticon.com/512/15735/15735559.png' height='24' style='vertical-align:middle;' class = 'blue-square'> Negative
+     <div class = 'legend-custom-row'>
+        <img src='https://cdn-icons-png.flaticon.com/512/15735/15735559.png' height='24' style='vertical-align:middle;' class = 'red-square'> 
+        <div style='position:relative;top:0.2rem;margin-left:30px'>Positive</div>
+     </div>
+     <div class = 'legend-custom-row'>
+     <img src='https://cdn-icons-png.flaticon.com/512/15735/15735559.png' height='24' style='vertical-align:middle;' class = 'blue-square'>
+     <div style='position:relative;top:0.2rem;margin-left:30px;'>Negative</div>
+      </div>
+   </div>"
+  )
+)
+
+eDNA_legend_html <- HTML(
+  paste0(
+    "<div style='background: #ffffff00; padding: 0px; border-radius: 5px;'>
+     <strong>eDNA Results</strong>
+     <div class = 'legend-custom-row'>
+          <i class='fa-solid fa-circle orange-marker legend-circle'></i>
+          <i class='fa-regular fa-circle legend-circle' style='filter:brightness(0)'></i> 
+          Positive
+      </div>
+      <div class = 'legend-custom-row'>
+          <i class='fa-solid fa-circle purple-marker legend-circle'></i>
+          <i class='fa-regular fa-circle legend-circle' style='filter:brightness(0)'></i> 
+          Negative
+      </div>
    </div>"
   )
 )
@@ -97,7 +124,11 @@ observe({
         options = pathOptions(pane = 'fish_results')
       ) |> 
       addControl(
-        html = legend_html,
+        html = eDNA_legend_html,
+        position = 'topright'
+      ) |> 
+      addControl(
+        html = fish_legend_html,
         position = "topright"
       )
 
@@ -115,15 +146,16 @@ observe({
         fillColor = ~edna_results_colour,
         fillOpacity = 0.6,
         color = 'black',
-        weight = 1,
+        weight = 2.5,
+        opacity = 0.8,
         group = 'eDNA Results',
         label = lapply(edna_dat_tbl, htmltools::HTML),
         options = pathOptions(pane = 'eDNA_results')
-      ) |> 
-      addLegend(title = 'eDNA (Mc) Results',
-                colors = unique(edna_dat$edna_results_colour),
-                labels = unique(na.omit(edna_dat$e_dna_results_mc))
-      )
+      ) #|> 
+      # addLegend(title = 'eDNA (Mc) Results',
+      #           colors = unique(edna_dat$edna_results_colour),
+      #           labels = unique(na.omit(edna_dat$e_dna_results_mc))
+      # )
     
     l
   }

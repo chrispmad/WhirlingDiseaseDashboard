@@ -1,9 +1,34 @@
 .red-square {
   background: #ff000080;
+  position: absolute;
 }
 
 .blue-square {
-  background: #3498db80;
+  background: #3232af80;
+  position: absolute;
+}
+
+.purple-marker {
+  color: purple;
+  position: absolute;
+}
+
+.orange-marker {
+  color: orange;
+  position: absolute;
+}
+
+.marker-outline {
+  color: black;
+}
+
+.legend-custom-row {
+  margin: 5px;
+}
+
+.legend-circle {
+  margin-top:2px;
+  scale:1.5;
 }
 
 .data-update-text {
