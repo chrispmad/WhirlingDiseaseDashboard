@@ -1,22 +1,12 @@
 # dat = sf::read_sf("app/www/sampling_results.gpkg")
 # col = sf::read_sf("app/www/columbia_watershed.gpkg")
 # subw = sf::read_sf("app/www/subwatershed_groups.gpkg")
-dat = sf::read_sf("sampling_results.gpkg")
-col = sf::read_sf("columbia_watershed.gpkg")
-subw = sf::read_sf("subwatershed_groups.gpkg")
+dat = sf::read_sf("www/sampling_results.gpkg")
+col = sf::read_sf("www/columbia_watershed.gpkg")
+subw = sf::read_sf("www/subwatershed_groups.gpkg")
 
 # Remove sites that weren't sampled.
 dat = dat |> dplyr::filter(stringr::str_detect(sampled_in_2024_y_n, "^Y"))
-
-# Merge two rows for Kootenay Lake. Martina may want this changed in the 
-# future.
-kootenay_results = as.numeric(dat[dat$sample_site_name == "Kootenay Lake",]$number_of_fish_sampled)
-dat[dat$sample_site_name == "Kootenay Lake",]$number_of_fish_sampled = as.character(sum(kootenay_results))
-dat[dat$sample_site_name == "Kootenay Lake",]$region = "Kootenay"
-dat[dat$sample_site_name == "Kootenay Lake",]$delivery_agency = "WLRS"
-dat[dat$sample_site_name == "Kootenay Lake",]$funding_sources = "LBIS"
-
-dat = dat[-which(dat$sample_site_name == 'Kootenay Lake')[2],]
 
 # Convert levels for eDNA to 'Positive' and 'Negative'
 # unique(dat$e_dna_results_mc)
@@ -73,9 +63,16 @@ dat = dat |>
     fish_sampling_results_q_pcr_mc_detected == "Pending" ~ 'pink',
     T ~ 'black'
   )) |> 
+  # dplyr::mutate(edna_results_colour = dplyr::case_when(
+  #   e_dna_results_mc == "Negative" ~ 'purple',
+  #   e_dna_results_mc == "Positive" ~ 'orange',
+  #   e_dna_results_mc == "Pending" ~ 'pink',
+  #   T ~ 'black'
+  # ))
   dplyr::mutate(edna_results_colour = dplyr::case_when(
-    e_dna_results_mc == "Negative" ~ 'purple',
-    e_dna_results_mc == "Positive" ~ 'orange',
-    e_dna_results_mc == "Pending" ~ 'pink',
-    T ~ 'black'
-  ))
+      e_dna_results_mc == "Negative" & e_dna_results_tubifex == "Negative" ~ 'purple',
+      e_dna_results_mc == "Positive" & e_dna_results_tubifex == "Positive" ~ 'yellow',
+      (e_dna_results_mc == "Negative" & e_dna_results_tubifex == "Positive" | e_dna_results_mc == "Positive" & e_dna_results_tubifex == "Negative") ~ "orange",
+      e_dna_results_mc == "Pending" ~ 'pink',
+      T ~ 'black'
+    ))

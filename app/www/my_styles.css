@@ -18,6 +18,11 @@
   position: absolute;
 }
 
+.yellow-marker {
+  color: yellow;
+  position: absolute;
+}
+
 .marker-outline {
   color: black;
 }
@@ -42,6 +47,7 @@
 
 .download-data-btn {
   background: #48999e;
+  visibility: hidden;
 }
 
 .download-data-btn:hover {

@@ -10,7 +10,7 @@ leaflet_card = card(
 ui <- page_navbar(
   theme = bs_theme(bootswatch = "flatly", version = 5),
   shiny::includeCSS("www/my_styles.css"),
-  title = h5("Whirling Disease Dashboard"),
+  title = h5("Whirling Disease 2024 Results"),
   bslib::nav_item(
     div(
       shiny::downloadButton(outputId = 'data_dl', label = "Download Data", class = 'download-data-btn'),

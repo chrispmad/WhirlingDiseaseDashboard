@@ -47,12 +47,17 @@ eDNA_legend_html <- HTML(
      <div class = 'legend-custom-row'>
           <i class='fa-solid fa-circle orange-marker legend-circle'></i>
           <i class='fa-regular fa-circle legend-circle' style='filter:brightness(0)'></i> 
-          Positive
+          Mixed
       </div>
       <div class = 'legend-custom-row'>
           <i class='fa-solid fa-circle purple-marker legend-circle'></i>
           <i class='fa-regular fa-circle legend-circle' style='filter:brightness(0)'></i> 
-          Negative
+          Both Negative
+      </div>
+      <div class = 'legend-custom-row'>
+          <i class='fa-solid fa-circle yellow-marker legend-circle'></i>
+          <i class='fa-regular fa-circle legend-circle' style='filter:brightness(0)'></i> 
+          Both Positive
       </div>
    </div>"
   )
@@ -133,7 +138,7 @@ observe({
       )
 
     edna_dat = dat |> 
-      dplyr::filter(sampling_method == 'Fish') |> 
+      # dplyr::filter(sampling_method == 'Fish') |>
       dplyr::filter(!is.na(e_dna_results_mc)) |> 
       dplyr::filter(e_dna_results_mc != "NA")
       
@@ -144,7 +149,7 @@ observe({
       addCircleMarkers(
         data = edna_dat,
         fillColor = ~edna_results_colour,
-        fillOpacity = 0.6,
+        fillOpacity = 0.8,
         color = 'black',
         weight = 2.5,
         opacity = 0.8,

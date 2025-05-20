@@ -1,5 +1,9 @@
 output$file_update_date = renderText({
-  paste0("Data Updated on ",format(as.Date(file.info('sampling_results.gpkg')$mtime),format='%Y-%b-%d'))
+  date_of_last_update = format(as.Date(file.info('sampling_results.gpkg')$mtime),format='%Y-%b-%d')
+  if(is.na(date_of_last_update)){
+    date_of_last_update = format(Sys.Date(),format='%Y-%b-%d')
+  }
+  paste0("Data Updated on ",date_of_last_update)
 })
 
 leaflet_tables = dat |> 
