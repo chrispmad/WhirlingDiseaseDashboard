@@ -9,8 +9,8 @@ make_leaf_tbl = function(dat){
                   `Sampling Method` = sampling_method,
                   `Fish Species Sampled` = fish_species_sampled,
                   `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-                  `eDNA Sampling Results (parasite - Myxobolus cerebralis)` = e_dna_results_mc,
-                  `eDNA Sampling Results (Freshwater Tubifex worm)` = e_dna_results_tubifex) |> 
+                  `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
+                  `eDNA Sampling Results (Tubifex worm)` = e_dna_results_tubifex) |> 
     leafpop::popupTable()
 }
 
@@ -40,11 +40,11 @@ sample_legend = HTML(
        <strong>Sample Type</strong>
         <div class = 'legend-custom-row'>
             <i class='fa-regular fa-circle legend-circle' style='margin-left:5px;filter:brightness(0)'></i>
-            Parasite eDNA
+            eDNA (M. cerebralis - parasite)
         </div>
         <div class = 'legend-custom-row'>
             <img src='https://www.freeiconspng.com/uploads/triangle-shape-png-25.png' height='24' style='vertical-align:middle;' class = 'red-square'> 
-            Tubifex eDNA
+            eDNA (Tubifex worm)
         </div>
         <div class = 'legend-custom-row'>
           <img src='https://cdn-icons-png.flaticon.com/512/15735/15735559.png' height='24' style='vertical-align:middle;' class = 'red-square'> 

@@ -27,8 +27,8 @@ output$data_dl <- downloadHandler(
                     `Sampling Method` = sampling_method,
                     `Fish Species Sampled` = fish_species_sampled,
                     `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-                    `eDNA Sampling Results (parasite - Myxobolus cerebralis)` = e_dna_results_mc,
-                    `eDNA Sampling Results (Freshwater Tubifex worm)` = e_dna_results_tubifex) |>
+                    `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
+                    `eDNA Sampling Results (Tubifex worm)` = e_dna_results_tubifex) |>
       dplyr::distinct() |>
       dplyr::arrange(`Sample Site`)
 
