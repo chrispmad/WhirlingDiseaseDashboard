@@ -10,68 +10,79 @@ make_leaf_tbl = function(dat){
                   `Fish Species Sampled` = fish_species_sampled,
                   `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
                   `eDNA Sampling Results (parasite - Myxobolus cerebralis)` = e_dna_results_mc,
-                  `eDNA Sampling Results (Freshwater tubifex worm)` = e_dna_results_tubifex) |> 
+                  `eDNA Sampling Results (Freshwater Tubifex worm)` = e_dna_results_tubifex) |> 
     leafpop::popupTable()
 }
 
-fish_pos = leaflet::makeIcon(iconUrl = "https://cdn-icons-png.flaticon.com/512/15735/15735559.png",
+fish_pos = leaflet::icons(iconUrl = "https://www.freeiconspng.com/uploads/orange-square-image-2.png",
                              iconWidth = 25, iconHeight = 25,
                              iconAnchorX = 12, iconAnchorY = 12,
-                             className = 'red-square')
+                             className = 'yellow-marker')
 
-fish_neg = leaflet::makeIcon(iconUrl = "https://cdn-icons-png.flaticon.com/512/15735/15735559.png",
+fish_neg = leaflet::makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/orange-square-image-2.png",
                              iconWidth = 25, iconHeight = 25,
                              iconAnchorX = 12, iconAnchorY = 12,
-                             className = 'blue-square')
+                             className = 'purple-marker')
 
-fish_legend_html <- HTML(
+edna_tub_pos = leaflet::makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/orange-triangle-image-vector-0.png",
+                             iconWidth = 25, iconHeight = 25,
+                             iconAnchorX = 12, iconAnchorY = 12,
+                             className = 'yellow-marker')
+
+edna_tub_neg = leaflet::makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/orange-triangle-image-vector-0.png",
+                             iconWidth = 25, iconHeight = 25,
+                             iconAnchorX = 12, iconAnchorY = 12,
+                             className = 'purple-marker')
+
+sample_legend = HTML(
+    paste0(
+      "<div style='background: #ffffff00; padding: 0px; border-radius: 5px;'>
+       <strong>Sample Type</strong>
+        <div class = 'legend-custom-row'>
+            <i class='fa-regular fa-circle legend-circle' style='margin-left:5px;filter:brightness(0)'></i>
+            Parasite eDNA
+        </div>
+        <div class = 'legend-custom-row'>
+            <img src='https://www.freeiconspng.com/uploads/triangle-shape-png-25.png' height='24' style='vertical-align:middle;' class = 'red-square'> 
+            Tubifex eDNA
+        </div>
+        <div class = 'legend-custom-row'>
+          <img src='https://cdn-icons-png.flaticon.com/512/15735/15735559.png' height='24' style='vertical-align:middle;' class = 'red-square'> 
+          Fish
+        </div>
+        <p>Note: metadata can be seen by <br>hovering over the points.</p>
+     </div>"
+    )
+  )
+
+results_legend = HTML(
   paste0(
     "<div style='background: #ffffff00; padding: 0px; border-radius: 5px;'>
-     <strong>Fish Results</strong>
-     <div class = 'legend-custom-row'>
-        <img src='https://cdn-icons-png.flaticon.com/512/15735/15735559.png' height='24' style='vertical-align:middle;' class = 'red-square'> 
-        <div style='position:relative;top:0.2rem;margin-left:30px'>Positive</div>
-     </div>
-     <div class = 'legend-custom-row'>
-     <img src='https://cdn-icons-png.flaticon.com/512/15735/15735559.png' height='24' style='vertical-align:middle;' class = 'blue-square'>
-     <div style='position:relative;top:0.2rem;margin-left:30px;'>Negative</div>
-      </div>
-   </div>"
+       <strong>Result</strong>
+        <div class = 'legend-custom-row'>
+            <i class='fa-solid fa-circle yellow-marker-legend' style='margin-left:5px;'></i>
+            <i class='fa-regular fa-circle' style='margin-left:5px;filter:brightness(0)'></i>
+            Positive
+        </div>
+        <div class = 'legend-custom-row'>
+            <i class='fa-solid fa-circle purple-marker-legend' style='margin-left:5px;'></i> 
+            <i class='fa-regular fa-circle' style='margin-left:5px;filter:brightness(0)'></i> 
+            Negative
+        </div>
+     </div>"
   )
 )
-
-eDNA_legend_html <- HTML(
-  paste0(
-    "<div style='background: #ffffff00; padding: 0px; border-radius: 5px;'>
-     <strong>eDNA Results</strong>
-     <div class = 'legend-custom-row'>
-          <i class='fa-solid fa-circle orange-marker legend-circle'></i>
-          <i class='fa-regular fa-circle legend-circle' style='filter:brightness(0)'></i> 
-          Mixed
-      </div>
-      <div class = 'legend-custom-row'>
-          <i class='fa-solid fa-circle purple-marker legend-circle'></i>
-          <i class='fa-regular fa-circle legend-circle' style='filter:brightness(0)'></i> 
-          Both Negative
-      </div>
-      <div class = 'legend-custom-row'>
-          <i class='fa-solid fa-circle yellow-marker legend-circle'></i>
-          <i class='fa-regular fa-circle legend-circle' style='filter:brightness(0)'></i> 
-          Both Positive
-      </div>
-   </div>"
-  )
-)
-
+htmltools::html_print(sample_legend)
 output$my_leaf = renderLeaflet({
   
   leaflet() |> 
     addTiles() |> 
-    addLayersControl(overlayGroups = c("Fish Results","eDNA Results"),
+    addLayersControl(overlayGroups = c("eDNA Results (parasite)", "eDNA Results (Tubifex)","Fish Results"),
                      position = 'bottomleft',
                      options = leaflet::layersControlOptions(collapsed = F)) |> 
-    addMapPane(name = 'fish_results', zIndex = 400) |> 
-    addMapPane(name = 'eDNA_results', zIndex = 500) |> 
+    addMapPane(name = 'Fish Results', zIndex = 400) |> 
+    addMapPane(name = 'eDNA Results (Tubifex)', zIndex = 500) |> 
+    addMapPane(name = 'eDNA Results (parasite)', zIndex = 600) |> 
     addPolygons(
       data = subw,
       color = 'grey',
@@ -119,48 +130,73 @@ observe({
         icon = ~fish_pos,
         group = "Fish Results",
         label = lapply(pos_fish_tbl, htmltools::HTML),
-        options = pathOptions(pane = 'fish_results')
+        options = pathOptions(pane = 'Fish Results')
       ) |> 
       addMarkers(
         data = neg_fish_dat,
         icon = ~fish_neg,
         group = "Fish Results",
         label = lapply(neg_fish_tbl, htmltools::HTML),
-        options = pathOptions(pane = 'fish_results')
+        options = pathOptions(pane = 'Fish Results')
       ) |> 
       addControl(
-        html = eDNA_legend_html,
+        html = sample_legend,
         position = 'topright'
       ) |> 
       addControl(
-        html = fish_legend_html,
-        position = "topright"
+        html = results_legend,
+        position = 'topright'
       )
 
-    edna_dat = dat |> 
-      # dplyr::filter(sampling_method == 'Fish') |>
+    edna_dat_myx = dat |> 
       dplyr::filter(!is.na(e_dna_results_mc)) |> 
       dplyr::filter(e_dna_results_mc != "NA")
       
-    edna_dat_tbl = make_leaf_tbl(edna_dat)
+    edna_dat_myx_tbl = make_leaf_tbl(edna_dat_myx)
+    
+    edna_dat_tub = dat |> 
+      # dplyr::filter(sampling_method == 'Fish') |>
+      dplyr::filter(!is.na(e_dna_results_mc)) |> 
+      dplyr::filter(e_dna_results_tubifex != "NA")
+    
+    edna_dat_tub_neg = edna_dat_tub |> 
+      dplyr::filter(e_dna_results_tubifex == 'Negative')
+    
+    edna_dat_tub_pos = edna_dat_tub |> 
+      dplyr::filter(e_dna_results_tubifex == 'Positive')
+    
+    edna_dat_tub_pos_tbl = make_leaf_tbl(edna_dat_tub_pos)
+    edna_dat_tub_neg_tbl = make_leaf_tbl(edna_dat_tub_neg)
     
     l = l |> 
-      # Add eDNA sampling
+      # Add Myx eDNA sampling
       addCircleMarkers(
-        data = edna_dat,
-        fillColor = ~edna_results_colour,
+        data = edna_dat_myx,
+        fillColor = ~e_dna_myx_colour,
         fillOpacity = 0.8,
         color = 'black',
         weight = 2.5,
         opacity = 0.8,
-        group = 'eDNA Results',
-        label = lapply(edna_dat_tbl, htmltools::HTML),
-        options = pathOptions(pane = 'eDNA_results')
-      ) #|> 
-      # addLegend(title = 'eDNA (Mc) Results',
-      #           colors = unique(edna_dat$edna_results_colour),
-      #           labels = unique(na.omit(edna_dat$e_dna_results_mc))
-      # )
+        radius = 12,
+        group = 'eDNA Results (parasite)',
+        label = lapply(edna_dat_myx_tbl, htmltools::HTML),
+        options = pathOptions(pane = 'eDNA Results (parasite)')
+      ) |> 
+      # Add Tubifex eDNA sampling
+      addMarkers(
+        data = edna_dat_tub_neg,
+        icon = ~edna_tub_neg,
+        group = "eDNA Results (Tubifex)",
+        label = lapply(edna_dat_tub_neg_tbl, htmltools::HTML),
+        options = pathOptions(pane = 'eDNA Results (Tubifex)')
+      ) |> 
+      addMarkers(
+        data = edna_dat_tub_pos,
+        icon = ~edna_tub_pos,
+        group = "eDNA Results (Tubifex)",
+        label = lapply(edna_dat_tub_pos_tbl, htmltools::HTML),
+        options = pathOptions(pane = 'eDNA Results (Tubifex)')
+      )
     
     l
   }

@@ -1,4 +1,4 @@
-.red-square {
+/*.red-square {
   background: #ff000080;
   position: absolute;
 }
@@ -6,21 +6,43 @@
 .blue-square {
   background: #3232af80;
   position: absolute;
-}
+}*/
 
 .purple-marker {
-  color: purple;
-  position: absolute;
-}
-
-.orange-marker {
-  color: orange;
-  position: absolute;
+  filter: brightness(0.4) hue-rotate(260deg);
 }
 
 .yellow-marker {
-  color: yellow;
+  
+}
+
+.purple-marker-legend {
+  color: #612073;
   position: absolute;
+  opacity: 1 !important;
+}
+
+.yellow-marker-legend {
+  color: #F97912;
+  position: absolute;
+  opacity: 1 !important;
+}
+
+.purple-children-marker {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: 1px solid red;
+  background-color: rgba(128, 0, 128, 0.5); /* semi-transparent purple */
+  pointer-events: none; /* optional: lets clicks pass through */
+  border-radius: 4px;    /* optional: makes it look nicer */
+}
+
+.yellow-children-marker {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  color: yellow;
 }
 
 .marker-outline {
@@ -47,7 +69,7 @@
 
 .download-data-btn {
   background: #48999e;
-  visibility: hidden;
+  /*visibility: hidden;*/
 }
 
 .download-data-btn:hover {

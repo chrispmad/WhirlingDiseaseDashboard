@@ -1,7 +1,8 @@
 output$file_update_date = renderText({
   date_of_last_update = format(as.Date(file.info('sampling_results.gpkg')$mtime),format='%Y-%b-%d')
   if(is.na(date_of_last_update)){
-    date_of_last_update = format(Sys.Date(),format='%Y-%b-%d')
+    the_date = stringr::str_extract(lubridate::with_tz(Sys.Date(), tzone = "America/Vancouver"), "[0-9]{4}-[0-9]{2}-[0-9]{2}")
+    date_of_last_update = format(the_date,format='%Y-%b-%d')
   }
   paste0("Data Updated on ",date_of_last_update)
 })

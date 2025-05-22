@@ -63,16 +63,6 @@ dat = dat |>
     fish_sampling_results_q_pcr_mc_detected == "Pending" ~ 'pink',
     T ~ 'black'
   )) |> 
-  # dplyr::mutate(edna_results_colour = dplyr::case_when(
-  #   e_dna_results_mc == "Negative" ~ 'purple',
-  #   e_dna_results_mc == "Positive" ~ 'orange',
-  #   e_dna_results_mc == "Pending" ~ 'pink',
-  #   T ~ 'black'
-  # ))
-  dplyr::mutate(edna_results_colour = dplyr::case_when(
-      e_dna_results_mc == "Negative" & e_dna_results_tubifex == "Negative" ~ 'purple',
-      e_dna_results_mc == "Positive" & e_dna_results_tubifex == "Positive" ~ 'yellow',
-      (e_dna_results_mc == "Negative" & e_dna_results_tubifex == "Positive" | e_dna_results_mc == "Positive" & e_dna_results_tubifex == "Negative") ~ "orange",
-      e_dna_results_mc == "Pending" ~ 'pink',
-      T ~ 'black'
-    ))
+  dplyr::mutate(e_dna_myx_colour = ifelse(e_dna_results_mc == 'Positive', '#F97912', '#612073')) |> 
+  dplyr::mutate(e_dna_tubifex_colour = ifelse(e_dna_results_tubifex == "Positive", "#F97912", "#612073"))
+
