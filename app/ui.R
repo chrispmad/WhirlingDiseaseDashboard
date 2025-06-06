@@ -10,6 +10,7 @@ leaflet_card = card(
 ui <- page_navbar(
   theme = bs_theme(bootswatch = "flatly", version = 5),
   shiny::includeCSS("www/my_styles.css"),
+  # shiny::includeScript("www/leaflet_point_spread.js"),
   title = h5("Whirling Disease 2024 Results"),
   bslib::nav_item(
     div(
@@ -18,5 +19,6 @@ ui <- page_navbar(
       class="data-update-text"
       )
   ),
-  leaflet_card
+  leaflet_card,
+  card(class = 'hover-clone-pane', style = "position: fixed; pointer-events: none; z-index: 9999;")
 )

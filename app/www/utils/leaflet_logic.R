@@ -1,3 +1,62 @@
+shunt_amount = reactive({
+  dplyr::case_when(
+    leaf_zoom() <= 8 ~ 0.1,
+    leaf_zoom() == 9 ~ 0.05,
+    leaf_zoom() == 10 ~ 0.025,
+    leaf_zoom() == 11 ~ 0.01,
+    leaf_zoom() == 12 ~ 0.005,
+    leaf_zoom() == 13 ~ 0.0025,
+    T ~ 0.001,
+  )
+})
+
+# This function moves fish-type results a bit to the east,
+# and parasite-type results a little west.
+shunt_dat = function(dat, type){
+  if('geom' %in% names(dat)) dat = dat |> dplyr::rename(geometry = geom)
+  if(type == 'fish'){
+    output = dat |> 
+      dplyr::mutate(long_to_jitter = sf::st_coordinates(geometry)[,1],
+                    lat_to_jitter = sf::st_coordinates(geometry)[,2]) |> 
+      dplyr::mutate(long_to_jitter = long_to_jitter + shunt_amount()) |> 
+      sf::st_drop_geometry() |> 
+      sf::st_as_sf(coords = c("long_to_jitter","lat_to_jitter"), crs = 4326)
+  }
+  if(type == 'parasite'){
+    output = dat |> 
+      dplyr::mutate(long_to_jitter = sf::st_coordinates(geometry)[,1],
+                    lat_to_jitter = sf::st_coordinates(geometry)[,2]) |> 
+      dplyr::mutate(long_to_jitter = long_to_jitter - shunt_amount()) |> 
+      sf::st_drop_geometry() |> 
+      sf::st_as_sf(coords = c("long_to_jitter","lat_to_jitter"), crs = 4326)
+  }
+  output
+}
+
+# my_jitter = function(dat){
+#   if(leaf_zoom() <= 8){
+#     output = sf::st_jitter(dat, factor = 0.0002)
+#   } else {
+#   output = sf::st_jitter(dat, factor = 0.002)
+#   }
+#   output
+# }
+
+# jitter_big = function(dat){
+#   sf::st_jitter(dat, factor = 0.002)
+# }
+# 
+# jitter_little = function(dat){
+#   sf::st_jitter(dat, factor = 0.0002)
+# }
+
+leaf_zoom = reactive({
+  req(!is.null(input$my_leaf_zoom))
+  print("leaflet zoom has resolved!")
+  print(paste0("Leafet zoom is : ",input$my_leaf_zoom))
+  input$my_leaf_zoom
+})
+
 make_leaf_tbl = function(dat){
   dat |> 
     dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
@@ -42,7 +101,7 @@ full_legend = HTML(
         <div class = 'legend-custom-row'>
             <i class='fa-solid fa-circle orange-marker-legend' style='margin-left:5px;'></i>
             <i class='fa-regular fa-circle' style='margin-left:5px;filter:brightness(0)'></i>
-            Positive
+            Suspect
             <i class='fa-solid fa-circle purple-marker-legend' style='margin-left:5px;'></i>
             <i class='fa-regular fa-circle' style='margin-left:5px;filter:brightness(0)'></i>
             Negative
@@ -50,9 +109,9 @@ full_legend = HTML(
         <div class = 'legend-custom-row'> <u>eDNA (Tubifex worm)</u> </div>
         <div class = 'legend-custom-row'>
             <img src='https://www.freeiconspng.com/uploads/orange-triangle-image-vector-0.png' height='24' style='vertical-align:middle;' class = 'orange-marker'> 
-            Positive
+            Presence
             <img src='https://www.freeiconspng.com/uploads/orange-triangle-image-vector-0.png' height='24' style='vertical-align:middle;' class = 'purple-marker'> 
-            Negative
+            Absence
         </div>
         <div class = 'legend-custom-row'> <u>Fish</u> </div>
         <div class = 'legend-custom-row'>
@@ -62,6 +121,7 @@ full_legend = HTML(
           Negative
         </div>
         <p>Note: metadata can be seen by <br>hovering over the points.</p>
+        <p>Note: Overlapping results are displayed <br> with a slight jitter to facilitate viewing</p>
      </div>"
     )
   )
@@ -136,14 +196,14 @@ observe({
     l = l |> 
       # Add fish sampling
       addMarkers(
-        data = pos_fish_dat,
+        data = pos_fish_dat |> shunt_dat(type = 'fish'),
         icon = ~fish_pos,
         group = "Fish Results",
         label = lapply(pos_fish_tbl, htmltools::HTML),
         options = pathOptions(pane = 'Fish Results')
       ) |> 
       addMarkers(
-        data = neg_fish_dat,
+        data = neg_fish_dat |> shunt_dat(type = 'fish'),
         icon = ~fish_neg,
         group = "Fish Results",
         label = lapply(neg_fish_tbl, htmltools::HTML),
@@ -181,7 +241,7 @@ observe({
     l = l |> 
       # Add Myx eDNA sampling
       addCircleMarkers(
-        data = edna_dat_myx,
+        data = edna_dat_myx |> shunt_dat(type = 'parasite'),
         fillColor = ~e_dna_myx_colour,
         fillOpacity = 0.8,
         color = 'black',
