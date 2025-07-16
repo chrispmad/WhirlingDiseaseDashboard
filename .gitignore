@@ -7,3 +7,4 @@ app/rsconnect/*
 data/*
 *.Rproj
 test_app.R
+app/www/*.html

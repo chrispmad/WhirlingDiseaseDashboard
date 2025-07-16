@@ -49,3 +49,12 @@ output$data_dl <- downloadHandler(
     openxlsx::saveWorkbook(my_wb, con, overwrite = T)
   }
 )
+
+output$WD_analysis_markdown_dl = downloadHandler(
+  filename = function() {
+    paste0('BC_WhirlingDisease_Monitoring_Priority_Assessment_2025.html')
+  },
+  content = function(con) {
+    file.copy("www/wb_prioritization_for_sampling.html", con)
+  }
+)
