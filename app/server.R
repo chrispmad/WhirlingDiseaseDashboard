@@ -39,9 +39,15 @@ server <- function(input, output, session) {
     if(entered_username() == "bcwd" & entered_password() == "ocean52"){
       download_button_ui(
         bslib::card(
+          bslib::layout_column_wrap(
+            1/2, 
             shiny::downloadButton(outputId = 'WD_analysis_markdown_dl', 
                                   label = "Download HTML File", 
+                                  class = 'download-data-btn'),
+            shiny::downloadButton(outputId = 'WD_analysis_excel_dl', 
+                                  label = "Download Excel File", 
                                   class = 'download-data-btn')
+          )
         )
       )
     } else {

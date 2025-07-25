@@ -58,3 +58,14 @@ output$WD_analysis_markdown_dl = downloadHandler(
     file.copy("www/wb_prioritization_for_sampling.html", con)
   }
 )
+
+excel_file_name = list.files(path = "www/", pattern = ".xlsx")
+
+output$WD_analysis_excel_dl = downloadHandler(
+  filename = function() {
+    paste0(excel_file_name)
+  },
+  content = function(con) {
+    file.copy(paste0("www/",excel_file_name), con)
+  }
+)
