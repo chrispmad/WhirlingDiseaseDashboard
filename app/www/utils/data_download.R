@@ -59,7 +59,7 @@ output$WD_analysis_markdown_dl = downloadHandler(
   }
 )
 
-excel_file_name = list.files(path = "www/", pattern = ".xlsx")
+excel_file_name = list.files(path = "www/", pattern = ".xlsx")[1]
 
 output$WD_analysis_excel_dl = downloadHandler(
   filename = function() {
