@@ -40,13 +40,17 @@ server <- function(input, output, session) {
       download_button_ui(
         bslib::card(
           bslib::layout_column_wrap(
-            1/2, 
+            1/3, 
             shiny::downloadButton(outputId = 'WD_analysis_markdown_dl', 
                                   label = "Download HTML File", 
                                   class = 'download-data-btn'),
             shiny::downloadButton(outputId = 'WD_analysis_excel_dl', 
                                   label = "Download Excel File", 
+                                  class = 'download-data-btn'),
+            shiny::downloadButton(outputId = 'proposed_locations_dl', 
+                                  label = "Download Short list map", 
                                   class = 'download-data-btn')
+            
           )
         )
       )
