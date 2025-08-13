@@ -8,7 +8,7 @@ output$data_dl <- downloadHandler(
     my_wb = openxlsx::createWorkbook()
     openxlsx::addWorksheet(my_wb, "Results")
     openxlsx::addWorksheet(my_wb, "Species Look-up")
-
+    
     results_for_download = dat |>
       dplyr::group_by(sample_site_name) |>
       dplyr::mutate(sampling_method = paste0(sampling_method, collapse = ' + ')) |>
@@ -31,21 +31,21 @@ output$data_dl <- downloadHandler(
                     `eDNA Sampling Results (Tubifex worm)` = e_dna_results_tubifex) |>
       dplyr::distinct() |>
       dplyr::arrange(`Sample Site`)
-
-
+    
+    
     openxlsx::writeData(my_wb, "Results", results_for_download)
     openxlsx::setColWidths(my_wb, sheet = 1, cols = 1:ncol(results_for_download), widths = "auto")
-
+    
     species_lookup_tbl = data.frame(
       acronym = c("BT","EBT","KOK","MW","RBT","SK","WCT"),
       species = c("Bull Trout","Eastern Brook Trout", "Kokanee",
                   "Mountain Whitefish","Rainbow Trout","Sockeye Salmon",
                   "Westslope Cutthroat Trout")
     )
-
+    
     openxlsx::writeData(my_wb,"Species Look-up", species_lookup_tbl)
-
-
+    
+    
     openxlsx::saveWorkbook(my_wb, con, overwrite = T)
   }
 )
@@ -59,6 +59,7 @@ output$WD_analysis_markdown_dl = downloadHandler(
   }
 )
 
+
 output$proposed_locations_dl = downloadHandler(
   filename = function() {
     paste0('2025_short_list_map.html')
@@ -69,6 +70,7 @@ output$proposed_locations_dl = downloadHandler(
 )
 
 excel_file_name = list.files(path = "www/", pattern = ".xlsx")
+
 
 output$WD_analysis_excel_dl = downloadHandler(
   filename = function() {
