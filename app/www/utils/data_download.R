@@ -59,6 +59,15 @@ output$WD_analysis_markdown_dl = downloadHandler(
   }
 )
 
+output$proposed_locations_dl = downloadHandler(
+  filename = function() {
+    paste0('2025_short_list_map.html')
+  },
+  content = function(con) {
+    file.copy("www/2025_short_list_map.html", con)
+  }
+)
+
 excel_file_name = list.files(path = "www/", pattern = ".xlsx")
 
 output$WD_analysis_excel_dl = downloadHandler(
