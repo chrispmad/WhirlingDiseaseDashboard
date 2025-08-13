@@ -1,6 +1,6 @@
 library(tidyverse)
 library(sf)
-onedrive_wd = paste0(str_extract(getwd(),"C:/Users/[A-Z]+/"),"OneDrive - Government of BC/data/")
+onedrive_wd = "//SFP.IDIR.BCGOV/S140/S40203/WFC AEB/General/2 SCIENCE - Invasives/AIS_R_Projects/LargeDataFiles/"
 dat = sf::read_sf("app/www/sampling_results.gpkg")
 # Read in SARA-listed species plus Sockeye Salmon (for all of BC)
 dfo_sar = sf::read_sf(paste0(onedrive_wd,"CNF/dfo_sara_and_crit_hab_bulltrout_and_sockeye_data.gpkg")) |> sf::st_transform(4326)
