@@ -7,7 +7,7 @@ library(bcdata)
 
 lan_folder = "//SFP.IDIR.BCGOV/S140/S40203/WFC AEB/General/"
 proj_wd = getwd()
-onedrive_wd = paste0(str_extract(getwd(),"C:/Users/[A-Z]+/"),"OneDrive - Government of BC/data/")
+onedrive_wd = "//SFP.IDIR.BCGOV/S140/S40203/WFC AEB/General/2 SCIENCE - Invasives/AIS_R_Projects/LargeDataFiles/"
 
 # Data
 # Copy excel results from LAN folder IF it has all the right columns. This is
@@ -45,14 +45,14 @@ sf::write_sf(dat, 'app/www/sampling_results.gpkg')
 
 # --------------------------
 
-col = sf::read_sf("W:/CMadsen/shared_data_sets/Columbia_River_Big_Watershed.shp") |> 
+col = sf::read_sf("//SFP.IDIR.BCGOV/S140/S40203/WFC AEB/General/2 SCIENCE - Invasives/AIS_R_Projects/CMadsen_Wdrive/shared_data_sets/Columbia_River_Big_Watershed.shp") |> 
   dplyr::summarise() |> 
   sf::st_transform(4326)
 
 sf::write_sf(col, "app/www/columbia_watershed.gpkg")
 
 # ---------------------------
-subw = sf::read_sf("W:/CMadsen/shared_data_sets/Columbia_River_Big_Watershed.shp") |> 
+subw = sf::read_sf("//SFP.IDIR.BCGOV/S140/S40203/WFC AEB/General/2 SCIENCE - Invasives/AIS_R_Projects/CMadsen_Wdrive/shared_data_sets/Columbia_River_Big_Watershed.shp") |> 
   sf::st_transform(4326) |> 
   dplyr::select(watershed_name = MAJOR_WA_1)
 
