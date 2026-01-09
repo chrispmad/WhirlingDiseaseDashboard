@@ -59,3 +59,29 @@ subw = sf::read_sf("//SFP.IDIR.BCGOV/S140/S40203/WFC AEB/General/2 SCIENCE - Inv
 if(file.exists('app/www/subwatershed_groups.gpkg')) file.remove('app/www/subwatershed_groups.gpkg')
 sf::write_sf(subw,'app/www/subwatershed_groups.gpkg')
 
+# -------------------------------
+
+## get the 2025 data 
+
+dat_2025 = read_excel("data/Whirling_Disease_2025_Sample_Tracking.xlsx")
+
+dat_2025 = purrr::set_names(dat_2025, snakecase::to_snake_case)
+
+dat_2025 = dat_2025 |> filter(!is.na(latitude) & !is.na(longitude))
+
+dat_2025 = dat_2025 |> 
+  tidyr::separate_longer_delim(cols = sampling_method_e_dna_or_fish_or_both, delim = " and ") |> 
+  rename(sampling_method = sampling_method_e_dna_or_fish_or_both)
+
+dat_2025 <- dat_2025 |>
+  mutate(
+    sampling_method = case_when(
+      sampling_method == "fish" ~ "Fish",
+      TRUE ~ sampling_method
+    )
+  )
+  
+dat_2025 = sf::st_as_sf(dat_2025, coords = c("longitude","latitude"), crs = 4326)
+
+if(file.exists('app/www/sampling_results_2025.gpkg')) file.remove('app/www/sampling_results_2025.gpkg')
+sf::write_sf(dat_2025, 'app/www/sampling_results_2025.gpkg')
