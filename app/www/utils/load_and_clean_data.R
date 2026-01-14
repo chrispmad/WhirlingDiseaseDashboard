@@ -66,3 +66,62 @@ dat = dat |>
   dplyr::mutate(e_dna_myx_colour = ifelse(e_dna_results_mc == 'Positive', '#F97912', '#612073')) |> 
   dplyr::mutate(e_dna_tubifex_colour = ifelse(e_dna_results_tubifex == "Positive", "#F97912", "#612073"))
 
+dat = dat |> 
+  mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
+
+#-----------------------------------------------------------------------------------------------------------
+
+
+dat_2025 = sf::read_sf("www/sampling_results_2025.gpkg")
+
+dat_2025 = dat_2025 |> dplyr::filter(stringr::str_detect(confirmed_to_have_been_sampled_in_2025_y_n, "^Y"))
+
+dat_2025 = dat_2025 |> 
+  rename(reach = sub_watershed_reach_name, sample_site_name = final_sample_site_name,
+         delivery_agency = sampling_organization, sampled_in_2025_y_n = confirmed_to_have_been_sampled_in_2025_y_n,
+         e_dna_results_mc = result_mc, e_dna_results_tubifex = result_tubifex)
+
+# dat_2025 = dat_2025 |> 
+#   dplyr::mutate(e_dna_results_mc = dplyr::case_when(
+#     e_dna_results_mc == "Not Detected" ~ "Negative",
+#     !is.na(e_dna_results_mc) ~ "Positive",
+#     T ~ NA
+#   )) |> 
+#   dplyr::mutate(e_dna_results_tubifex = dplyr::case_when(
+#     e_dna_results_tubifex == "Not Detected" ~ "Negative",
+#     !is.na(e_dna_results_tubifex) ~ "Positive",
+#     T ~ NA
+#   ))
+
+dat_no_results_2025 = dat_2025 |> 
+  dplyr::filter((is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) |> 
+  dplyr::mutate(e_dna_results_mc = "NA",
+                e_dna_results_tubifex = "NA",
+                fish_sampling_results_q_pcr_mc_detected = "NA")
+
+dat_2025 = dat_2025 |> 
+  dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) #|> 
+# dplyr::bind_rows(dat_no_results)
+
+## Placeholder as this is not in the results
+dat_2025$fish_species_sampled = "None specified"
+
+
+dat_2025 = dat_2025 |> 
+  dplyr::mutate(sample_type_colour = dplyr::case_when(
+    sampling_method == "eDNA" ~ 'gold',
+    sampling_method == "Fish" ~ 'salmon',
+    # sampling_method == "Fish + eDNA" ~ 'gold',
+    T ~ 'black'
+  )) |> 
+  dplyr::mutate(fish_results_colour = dplyr::case_when(
+    fish_sampling_results_q_pcr_mc_detected == "Negative" ~ 'lightgreen',
+    fish_sampling_results_q_pcr_mc_detected == "Positive" ~ 'purple',
+    fish_sampling_results_q_pcr_mc_detected == "Pending" ~ 'pink',
+    T ~ 'black'
+  )) |> 
+  dplyr::mutate(e_dna_myx_colour = ifelse(e_dna_results_mc == 'Positive', '#F97912', '#612073')) |> 
+  dplyr::mutate(e_dna_tubifex_colour = ifelse(e_dna_results_tubifex == "Positive", "#F97912", "#612073"))
+
+dat_2025 = dat_2025 |> 
+  mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
