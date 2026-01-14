@@ -1,30 +1,49 @@
-library(shiny)
-library(bslib)
-library(leaflet)
-library(tidyverse)
+library(shinymanager)
 
-leaflet_card = card(
-  leafletOutput('my_leaf')
+download_ui <- function(year) {
+  div(
+    downloadButton(
+      outputId = paste0("data_dl_", year),
+      label = "Download Dashboard Data",
+      class = "download-data-btn"
+    ),
+    p(textOutput(paste0("file_update_date_", year))),
+    class = "data-update-text"
+  )
+}
+
+creds <- data.frame(read.table("www/creds.txt", sep = ",", header = T))
+
+credentials <- data.frame(
+  user = creds$user,
+  password = sapply(creds$password, scrypt::hashPassword),
+  is_hashed_password = TRUE,
+  stringsAsFactors = FALSE
 )
 
-ui <- page_navbar(
-  theme = bs_theme(bootswatch = "flatly", version = 5),
-  shiny::includeCSS("www/my_styles.css"),
-  # shiny::includeScript("www/leaflet_point_spread.js"),
-  title = h5("Whirling Disease 2024 Results"),
-  bslib::nav_item(
-    shiny::actionButton('attempt_WD_analysis_download', 
-                        label = "Download 2025 WD Monitoring Analysis", 
-                          class = 'download-data-btn'),
-    style = 'right:20%;top:15%;position:absolute;'
-  ),
-  bslib::nav_item(
-    div(
-      shiny::downloadButton(outputId = 'data_dl', label = "Download Dashboard Data", class = 'download-data-btn'),
-      p(textOutput('file_update_date')),
-      class="data-update-text"
+
+# --- Your UI ---
+ui <- secure_app(
+  fluidPage(
+    theme = bs_theme(bootswatch = "flatly", version = 5),
+    shiny::includeCSS("www/my_styles.css"),
+    titlePanel("Whirling Disease Results"),
+    
+    tabsetPanel(
+      id = "active_tab",
+      
+      tabPanel(
+        title = "2024 Results",
+        download_ui("2024"),
+        leafletOutput("my_leaf_2024")
+      ),
+      
+      tabPanel(
+        title = "2025 Results",
+        download_ui("2025"),
+        leafletOutput("my_leaf_2025")
       )
-  ),
-  leaflet_card,
-  card(class = 'hover-clone-pane', style = "position: fixed; pointer-events: none; z-index: 9999;")
+    )
+  )
 )
+
