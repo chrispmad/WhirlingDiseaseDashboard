@@ -63,11 +63,28 @@ sf::write_sf(subw,'app/www/subwatershed_groups.gpkg')
 
 ## get the 2025 data 
 
-dat_2025 = read_excel("data/Whirling_Disease_2025_Sample_Tracking.xlsx")
+dat_2025_edna = read_excel("data/Whirling_Disease_2025_Sample_Tracking.xlsx", sheet = "eDNA")
 
-dat_2025 = purrr::set_names(dat_2025, snakecase::to_snake_case)
+dat_2025_fish = read_excel("data/Whirling_Disease_2025_Sample_Tracking.xlsx", sheet = "Fish")
 
-dat_2025 = dat_2025 |> filter(!is.na(latitude) & !is.na(longitude))
+dat_2025_edna = purrr::set_names(dat_2025_edna, snakecase::to_snake_case)
+
+dat_2025_edna = dat_2025_edna |> filter(!is.na(latitude) & !is.na(longitude))
+
+dat_2025_fish = purrr::set_names(dat_2025_fish, snakecase::to_snake_case)
+
+dat_2025_fish = dat_2025_fish |> filter(!is.na(latitude) & !is.na(longitude))
+
+dat_2025_fish = dat_2025_fish |> 
+  rename(fish_sampling_results_q_pcr_mc_detected = result)
+
+dat_2025_edna = dat_2025_edna |> 
+  mutate(across(everything(), as.character))
+
+dat_2025_fish = dat_2025_fish |> 
+  mutate(across(everything(), as.character))
+
+dat_2025 = bind_rows(dat_2025_edna, dat_2025_fish)
 
 dat_2025 = dat_2025 |> 
   tidyr::separate_longer_delim(cols = sampling_method_e_dna_or_fish_or_both, delim = " and ") |> 
@@ -80,8 +97,15 @@ dat_2025 <- dat_2025 |>
       TRUE ~ sampling_method
     )
   )
+
+### There are 2 NA value for Vaseux Lake - we will drop them as the comments say that the lake was not sampled?
+dat_2025 = dat_2025 |> 
+  filter(latitude != "NA" & longitude != "NA")
   
 dat_2025 = sf::st_as_sf(dat_2025, coords = c("longitude","latitude"), crs = 4326)
+
+dat_2025 = dat_2025 |> 
+  distinct()
 
 if(file.exists('app/www/sampling_results_2025.gpkg')) file.remove('app/www/sampling_results_2025.gpkg')
 sf::write_sf(dat_2025, 'app/www/sampling_results_2025.gpkg')
