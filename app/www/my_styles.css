@@ -8,6 +8,11 @@
   position: absolute;
 }*/
 
+.leaflet-container {
+  width: 100% !important;
+  height: calc(100vh - 150px) !important; /* subtract header/tab height */
+}
+
 .purple-marker {
   filter: brightness(0.4) hue-rotate(260deg);
 }
