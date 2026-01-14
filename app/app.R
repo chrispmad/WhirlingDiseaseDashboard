@@ -1,4 +1,4 @@
 source("ui.R")
 source("server.R")
 
-shinyApp(ui, server)
+shinyApp(secure_ui, server)
