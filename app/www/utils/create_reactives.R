@@ -1,3 +1,17 @@
+active_year <- reactive({
+  req(input$active_tab)
+  input$active_tab
+})
+
+get_dat <- reactive({
+  req(active_year())
+  switch(
+    active_year(),
+    "2024" = dat,
+    "2025" = dat_2025
+  )
+})
+
 output$file_update_date = renderText({
   date_of_last_update = format(as.Date(file.info('sampling_results.gpkg')$mtime),format='%Y-%b-%d')
   if(is.na(date_of_last_update)){
@@ -22,6 +36,15 @@ leaflet_tables = dat |>
                           "eDNA Sampling Results (Tubifex)")) |> 
   leafpop::popupTable()
 
+
+# Last update dates
+output$file_update_date_2024 <- renderText({ Sys.Date() })
+output$file_update_date_2025 <- renderText({ Sys.Date() })
+
+dat_year <- reactive({
+  req(input$active_tab)  # ensure a tab is selected
+  get_dat() |> dplyr::filter(year == input$active_tab)
+})
 # edna_leafpops = reactive({
 #   out = dat_e() |> 
 #     sf::st_drop_geometry() |> 
