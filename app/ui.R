@@ -1,4 +1,8 @@
 library(shinymanager)
+library(bslib)
+library(leaflet)
+library(leaflet.extras)
+library(tidyverse)
 
 download_ui <- function(year) {
   div(
