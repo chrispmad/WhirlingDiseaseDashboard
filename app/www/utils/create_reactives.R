@@ -28,12 +28,10 @@ leaflet_tables = dat |>
                 sampling_method,
                 fish_species_sampled,
                 fish_sampling_results_q_pcr_mc_detected,
-                e_dna_results_mc,
-                e_dna_results_tubifex) |> 
+                e_dna_results_mc) |> 
   purrr::set_names(c("Sample Site", "Sampled in 2024", "Sampling Method",
                           "Fish Species Sampled", "Fish Sampling Results",
-                          "eDNA Sampling Results (Mc)",
-                          "eDNA Sampling Results (Tubifex)")) |> 
+                          "eDNA Sampling Results (Mc)")) |> 
   leafpop::popupTable()
 
 
