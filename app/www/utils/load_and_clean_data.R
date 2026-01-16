@@ -104,7 +104,8 @@ dat_2025 = dat_2025 |>
 # dplyr::bind_rows(dat_no_results)
 
 ## Placeholder as this is not in the results
-dat_2025$fish_species_sampled = "None specified"
+dat_2025 = dat_2025 |> 
+  rename(fish_species_sampled = fish_species)
 
 
 dat_2025 = dat_2025 |> 
@@ -125,3 +126,14 @@ dat_2025 = dat_2025 |>
 
 dat_2025 = dat_2025 |> 
   mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
+
+
+
+#------------
+# New request - no more tubifex
+
+dat = dat |> 
+  select(-e_dna_results_tubifex)
+
+dat_2025 = dat_2025 |> 
+  select(-e_dna_results_tubifex)
