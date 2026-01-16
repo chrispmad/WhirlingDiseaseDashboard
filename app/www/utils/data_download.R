@@ -1,70 +1,116 @@
-# Helper function to create Excel workbook
 create_wb_for_year <- function(year, con, dat_dl) {
+  
+  
+  
   dat_year <- dat_dl %>% dplyr::filter(year == year)
+  
+  
   
   wb <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(wb, "Results")
   openxlsx::addWorksheet(wb, "Species Look-up")
   
-  if(nrow(dat_year) > 0) {
-    results <- dat_year %>%
-      dplyr::group_by(sample_site_name) %>%
-      dplyr::mutate(sampling_method = paste0(sampling_method, collapse = " + ")) %>%
-      dplyr::ungroup() %>%
-      dplyr::distinct() %>%
+  if (nrow(dat_year) > 0) {
+    
+    dat_year <- dat_year %>%
       dplyr::mutate(
-        Latitude  = if("geom" %in% names(.) & !all(is.na(geom))) round(sf::st_coordinates(geom)[, 2], 4) else NA,
-        Longitude = if("geom" %in% names(.) & !all(is.na(geom))) round(sf::st_coordinates(geom)[, 1], 4) else NA
-      ) %>%
-      dplyr::mutate(
-        dplyr::across(
-          c(
-            fish_sampling_results_q_pcr_mc_detected,
-            fish_species_sampled,
-            e_dna_results_mc,
-            e_dna_results_tubifex
-          ),
-          ~ tidyr::replace_na(.x, "NA")
-        )
-      ) %>%
-      sf::st_drop_geometry()
+        Longitude = sf::st_coordinates(geom)[, 1],
+        Latitude  = sf::st_coordinates(geom)[, 2]
+      )
     
     
-    if(year == "2025") {
+    
+    
+    # Column selection differs by year
+    if (year == "2025") {
+      
+      results <- dat_year %>%
+        dplyr::group_by(sample_site_name) %>%
+        dplyr::summarise(
+          `Sampling Method` = paste(sort(unique(sampling_method)), collapse = " + "),
+          waterbody_name = dplyr::first(waterbody_name),
+          fish_species_sampled = tidyr::replace_na(dplyr::first(fish_species_sampled), "NA"),
+          fish_sampling_results_q_pcr_mc_detected =
+            tidyr::replace_na(dplyr::first(fish_sampling_results_q_pcr_mc_detected), "NA"),
+          e_dna_results_mc = tidyr::replace_na(dplyr::first(e_dna_results_mc), "NA"),
+          Latitude  = round(dplyr::first(Latitude), 4),
+          Longitude = round(dplyr::first(Longitude), 4),
+          .groups = "drop"
+        )|> 
+        sf::st_drop_geometry()
       
       results <- results %>%
         dplyr::select(
+          
           `Waterbody Name` = waterbody_name,
+          
           `Sample Site` = sample_site_name,
           Latitude,
           Longitude,
-          `Sampling Method` = sampling_method,
+          `Sampling Method`,
+          
           `Fish Species Sampled` = fish_species_sampled,
-          `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-          `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
-          `eDNA Sampling Results (Tubifex worm)` = e_dna_results_tubifex
+          
+          `Fish Sampling Results` =
+            fish_sampling_results_q_pcr_mc_detected,
+          
+          `eDNA Sampling Results (M. cerebralis - parasite)` =
+            e_dna_results_mc
         )
+      
     } else {
+      
+      results <- dat_year %>%
+        dplyr::group_by(sample_site_name) %>%
+        dplyr::summarise(
+          `Sampling Method` = paste(sort(unique(sampling_method)), collapse = " + "),
+          fish_species_sampled = tidyr::replace_na(dplyr::first(fish_species_sampled), "NA"),
+          fish_sampling_results_q_pcr_mc_detected =
+            tidyr::replace_na(dplyr::first(fish_sampling_results_q_pcr_mc_detected), "NA"),
+          e_dna_results_mc = tidyr::replace_na(dplyr::first(e_dna_results_mc), "NA"),
+          Latitude  = round(dplyr::first(Latitude), 4),
+          Longitude = round(dplyr::first(Longitude), 4),
+          .groups = "drop"
+        ) |> 
+        sf::st_drop_geometry()
+      
+      
+      
       results <- results %>%
         dplyr::select(
+          
           `Sample Site` = sample_site_name,
           Latitude,
           Longitude,
-          `Sampling Method` = sampling_method,
+          `Sampling Method`,
+          
           `Fish Species Sampled` = fish_species_sampled,
-          `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-          `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
-          `eDNA Sampling Results (Tubifex worm)` = e_dna_results_tubifex
+          `Fish Sampling Results` =
+            fish_sampling_results_q_pcr_mc_detected,
+          
+          `eDNA Sampling Results (M. cerebralis - parasite)` =
+            e_dna_results_mc
         )
     }
     
-    results <- results %>% dplyr::arrange(`Sample Site`)
+    results <- results %>%
+      dplyr::arrange(`Sample Site`)
     
     openxlsx::writeData(wb, "Results", results)
-    openxlsx::setColWidths(wb, sheet = 1, cols = 1:ncol(results), widths = "auto")
+    openxlsx::setColWidths(
+      wb,
+      sheet = "Results",
+      cols = seq_len(ncol(results)),
+      widths = "auto"
+    )
     
   } else {
-    openxlsx::writeData(wb, "Results", "No data available for this year")
+    
+    openxlsx::writeData(
+      wb,
+      "Results",
+      "No data available for this year"
+    )
   }
   
   # Species lookup (same for all years)
@@ -72,11 +118,15 @@ create_wb_for_year <- function(year, con, dat_dl) {
     wb,
     "Species Look-up",
     tibble::tibble(
-      acronym = c("BT","EBT","KOK","MW","RBT","SK","WCT"),
+      acronym = c("BT", "EBT", "KOK", "MW", "RBT", "SK", "WCT"),
       species = c(
-        "Bull Trout","Eastern Brook Trout","Kokanee",
-        "Mountain Whitefish","Rainbow Trout",
-        "Sockeye Salmon","Westslope Cutthroat Trout"
+        "Bull Trout",
+        "Eastern Brook Trout",
+        "Kokanee",
+        "Mountain Whitefish",
+        "Rainbow Trout",
+        "Sockeye Salmon",
+        "Westslope Cutthroat Trout"
       )
     )
   )
