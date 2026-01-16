@@ -105,8 +105,7 @@ make_leaf_tbl_2024 <- function(dat){
            `Sampling Method` = sampling_method,
            `Fish Species Sampled` = fish_species_sampled,
            `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-           `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
-           `eDNA Sampling Results (Tubifex worm)` = e_dna_results_tubifex) %>%
+           `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc) %>%
     leafpop::popupTable()
 }
 
@@ -123,7 +122,7 @@ make_leaf_tbl_2025 <- function(dat){
     "waterbody_name", "sample_site_name", "Latitude", "Longitude",
     "sampling_method", "fish_species_sampled",
     "fish_sampling_results_q_pcr_mc_detected",
-    "e_dna_results_mc", "e_dna_results_tubifex"
+    "e_dna_results_mc"
   )
   existing_cols <- select_cols[select_cols %in% names(dat)]
   dat <- dat %>% dplyr::select(all_of(existing_cols))
@@ -134,8 +133,7 @@ make_leaf_tbl_2025 <- function(dat){
     "Sampling Method" = "sampling_method",
     "Fish Species Sampled" = "fish_species_sampled",
     "Fish Sampling Results" = "fish_sampling_results_q_pcr_mc_detected",
-    "eDNA Results (M. cerebralis - parasite)" = "e_dna_results_mc",
-    "eDNA Results (Tubifex worm)" = "e_dna_results_tubifex"
+    "eDNA Results (M. cerebralis - parasite)" = "e_dna_results_mc"
   )
   rename_map <- rename_map[names(rename_map) %in% names(dat)]
   dat <- dplyr::rename(dat, !!!rename_map)
@@ -181,13 +179,6 @@ full_legend = HTML(
             <i class='fa-regular fa-circle' style='margin-left:5px;filter:brightness(0)'></i>
             Negative
         </div>
-        <div class = 'legend-custom-row'> <u>eDNA (Tubifex worm)</u> </div>
-        <div class = 'legend-custom-row'>
-            <img src='https://www.freeiconspng.com/uploads/orange-triangle-image-vector-0.png' height='24' style='vertical-align:middle;' class = 'orange-marker'> 
-            Presence
-            <img src='https://www.freeiconspng.com/uploads/orange-triangle-image-vector-0.png' height='24' style='vertical-align:middle;' class = 'purple-marker'> 
-            Absence
-        </div>
         <div class = 'legend-custom-row'> <u>Fish</u> </div>
         <div class = 'legend-custom-row'>
           <img src='https://www.freeiconspng.com/uploads/orange-square-image-2.png' height='24' style='vertical-align:middle;' class = 'orange-marker'> 
@@ -209,13 +200,11 @@ output$my_leaf_2024 <- renderLeaflet({
     addTiles() %>%
     addLayersControl(
       overlayGroups = c("eDNA Results (M. cerebralis - parasite)",
-                        "eDNA Results (Tubifex worm)",
                         "Fish Results"),
       position = "bottomleft",
       options = layersControlOptions(collapsed = FALSE)
     ) %>%
     addMapPane("Fish Results", zIndex = 400) %>%
-    addMapPane("eDNA Results (Tubifex)", zIndex = 500) %>%
     addMapPane("eDNA Results (parasite)", zIndex = 600) %>%
     addPolygons(data = subw, color = "grey", weight = 1.5, fill = "transparent", label = ~watershed_name) %>%
     addPolygons(data = col, color = "purple", weight = 1.5, fill = "transparent", options = pathOptions(clickable = FALSE)) %>%
@@ -228,13 +217,11 @@ output$my_leaf_2025 <- renderLeaflet({
     addTiles() %>%
     addLayersControl(
       overlayGroups = c("eDNA Results (M. cerebralis - parasite)",
-                        "eDNA Results (Tubifex worm)",
                         "Fish Results"),
       position = "bottomleft",
       options = layersControlOptions(collapsed = FALSE)
     ) %>%
     addMapPane("Fish Results", zIndex = 400) %>%
-    addMapPane("eDNA Results (Tubifex)", zIndex = 500) %>%
     addMapPane("eDNA Results (parasite)", zIndex = 600) %>%
     addPolygons(data = subw, color = "grey", weight = 1.5, fill = "transparent", label = ~watershed_name) %>%
     addPolygons(data = col, color = "purple", weight = 1.5, fill = "transparent", options = pathOptions(clickable = FALSE)) %>%
@@ -274,26 +261,26 @@ observe({
     options = pathOptions(pane="Fish Results")
   )
   
-  # eDNA Tubifex
-  edna_tub_present <- dat %>% filter(!is.na(e_dna_results_tubifex), e_dna_results_tubifex=="Present")
-  edna_tub_absent <- dat %>% filter(!is.na(e_dna_results_tubifex), e_dna_results_tubifex=="Absent")
-  
-  
-  if(nrow(edna_tub_present) > 0) l <- l %>% addMarkers(
-    data = shunt_dat_2024(edna_tub_present,"parasite"),
-    icon = ~edna_tub_pos,
-    group = "eDNA Results (Tubifex worm)",
-    label = lapply(make_leaf_tbl_2024(edna_tub_present), htmltools::HTML),
-    options = pathOptions(pane="eDNA Results (Tubifex)")
-  )
-  
-  if(nrow(edna_tub_absent) > 0) l <- l %>% addMarkers(
-    data = shunt_dat_2024(edna_tub_absent,"parasite"),
-    icon = ~edna_tub_neg,
-    group = "eDNA Results (Tubifex worm)",
-    label = lapply(make_leaf_tbl_2024(edna_tub_absent), htmltools::HTML),
-    options = pathOptions(pane="eDNA Results (Tubifex)")
-  )
+  # # eDNA Tubifex
+  # edna_tub_present <- dat %>% filter(!is.na(e_dna_results_tubifex), e_dna_results_tubifex=="Present")
+  # edna_tub_absent <- dat %>% filter(!is.na(e_dna_results_tubifex), e_dna_results_tubifex=="Absent")
+  # 
+  # 
+  # if(nrow(edna_tub_present) > 0) l <- l %>% addMarkers(
+  #   data = shunt_dat_2024(edna_tub_present,"parasite"),
+  #   icon = ~edna_tub_pos,
+  #   group = "eDNA Results (Tubifex worm)",
+  #   label = lapply(make_leaf_tbl_2024(edna_tub_present), htmltools::HTML),
+  #   options = pathOptions(pane="eDNA Results (Tubifex)")
+  # )
+  # 
+  # if(nrow(edna_tub_absent) > 0) l <- l %>% addMarkers(
+  #   data = shunt_dat_2024(edna_tub_absent,"parasite"),
+  #   icon = ~edna_tub_neg,
+  #   group = "eDNA Results (Tubifex worm)",
+  #   label = lapply(make_leaf_tbl_2024(edna_tub_absent), htmltools::HTML),
+  #   options = pathOptions(pane="eDNA Results (Tubifex)")
+  # )
   
   # eDNA Myx
   edna_myx <- dat %>% filter(!is.na(e_dna_results_mc), e_dna_results_mc!="NA")
@@ -342,25 +329,25 @@ observe({
     options = pathOptions(pane="Fish Results")
   )
   
-  # eDNA Tubifex
-  edna_tub_present <- dat_2025 %>% filter(!is.na(e_dna_results_tubifex), e_dna_results_tubifex=="Present")
-  edna_tub_absent <- dat_2025 %>% filter(!is.na(e_dna_results_tubifex), e_dna_results_tubifex=="Absent")
-  
-  if(nrow(edna_tub_present) > 0) l <- l %>% addMarkers(
-    data = shunt_dat_2025(edna_tub_present,"parasite"),
-    icon = ~edna_tub_pos,
-    group = "eDNA Results (Tubifex worm)",
-    label = lapply(make_leaf_tbl_2025(edna_tub_present), htmltools::HTML),
-    options = pathOptions(pane="eDNA Results (Tubifex)")
-  )
-  
-  if(nrow(edna_tub_absent) > 0) l <- l %>% addMarkers(
-    data = shunt_dat_2025(edna_tub_absent,"parasite"),
-    icon = ~edna_tub_neg,
-    group = "eDNA Results (Tubifex worm)",
-    label = lapply(make_leaf_tbl_2025(edna_tub_absent), htmltools::HTML),
-    options = pathOptions(pane="eDNA Results (Tubifex)")
-  )
+  # # eDNA Tubifex
+  # edna_tub_present <- dat_2025 %>% filter(!is.na(e_dna_results_tubifex), e_dna_results_tubifex=="Present")
+  # edna_tub_absent <- dat_2025 %>% filter(!is.na(e_dna_results_tubifex), e_dna_results_tubifex=="Absent")
+  # 
+  # if(nrow(edna_tub_present) > 0) l <- l %>% addMarkers(
+  #   data = shunt_dat_2025(edna_tub_present,"parasite"),
+  #   icon = ~edna_tub_pos,
+  #   group = "eDNA Results (Tubifex worm)",
+  #   label = lapply(make_leaf_tbl_2025(edna_tub_present), htmltools::HTML),
+  #   options = pathOptions(pane="eDNA Results (Tubifex)")
+  # )
+  # 
+  # if(nrow(edna_tub_absent) > 0) l <- l %>% addMarkers(
+  #   data = shunt_dat_2025(edna_tub_absent,"parasite"),
+  #   icon = ~edna_tub_neg,
+  #   group = "eDNA Results (Tubifex worm)",
+  #   label = lapply(make_leaf_tbl_2025(edna_tub_absent), htmltools::HTML),
+  #   options = pathOptions(pane="eDNA Results (Tubifex)")
+  # )
   
   # eDNA Myx
   edna_myx <- dat_2025 %>% filter(!is.na(e_dna_results_mc), e_dna_results_mc!="NA")
