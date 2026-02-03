@@ -99,8 +99,8 @@ dat_no_results_2025 = dat_2025 |>
                 e_dna_results_tubifex = "NA",
                 fish_sampling_results_q_pcr_mc_detected = "NA")
 
-dat_2025 = dat_2025 |> 
-  dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) #|> 
+# dat_2025 = dat_2025 |>
+#   dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) #|>
 # dplyr::bind_rows(dat_no_results)
 
 ## Placeholder as this is not in the results

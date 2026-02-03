@@ -1,10 +1,10 @@
-create_wb_for_year <- function(year, con, dat_dl) {
+create_wb_for_year <- function(year_val, con, dat_dl) {
   
+  sf::sf_use_s2(FALSE)
   
+  year <- year_val
   
-  dat_year <- dat_dl %>% dplyr::filter(year == year)
-  
-  
+  dat_year = dat_dl
   
   wb <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(wb, "Results")
@@ -12,10 +12,12 @@ create_wb_for_year <- function(year, con, dat_dl) {
   
   if (nrow(dat_year) > 0) {
     
+    coords <- sf::st_coordinates(sf::st_point_on_surface(dat_year$geom))
+    
     dat_year <- dat_year %>%
       dplyr::mutate(
-        Longitude = sf::st_coordinates(geom)[, 1],
-        Latitude  = sf::st_coordinates(geom)[, 2]
+        Longitude = coords[, 1],
+        Latitude  = coords[, 2]
       )
     
     

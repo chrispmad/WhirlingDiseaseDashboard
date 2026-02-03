@@ -81,3 +81,12 @@
 .download-data-btn:hover {
   background: #264d4f;
 }
+
+.leaflet-control.legend {
+  font-size: 20px;
+}
+
+.leaflet-control.legend i {
+  width: 26px;
+  height: 26px;
+}

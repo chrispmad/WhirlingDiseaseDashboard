@@ -63,9 +63,11 @@ sf::write_sf(subw,'app/www/subwatershed_groups.gpkg')
 
 ## get the 2025 data 
 
-dat_2025_edna = read_excel("data/Whirling_Disease_2025_Sample_Tracking.xlsx", sheet = "eDNA")
+dat_2025_edna = read_excel("data/Whirling_Disease_2025_Sample_Tracking_correct_coords.xlsx", sheet = "eDNA")
 
-dat_2025_fish = read_excel("data/Whirling_Disease_2025_Sample_Tracking.xlsx", sheet = "Fish")
+dat_2025_fish = read_excel("data/Whirling_Disease_2025_Sample_Tracking_correct_coords.xlsx", sheet = "Fish")
+
+
 
 dat_2025_edna = purrr::set_names(dat_2025_edna, snakecase::to_snake_case)
 
@@ -84,11 +86,21 @@ dat_2025_edna = dat_2025_edna |>
 dat_2025_fish = dat_2025_fish |> 
   mutate(across(everything(), as.character))
 
+dat_2025_edna <- dat_2025_edna %>%
+  dplyr::mutate(
+    sampling_method = "eDNA"
+  )
+
+dat_2025_fish <- dat_2025_fish %>%
+  dplyr::mutate(
+    sampling_method = "Fish"
+  )
+
 dat_2025 = bind_rows(dat_2025_edna, dat_2025_fish)
 
-dat_2025 = dat_2025 |> 
-  tidyr::separate_longer_delim(cols = sampling_method_e_dna_or_fish_or_both, delim = " and ") |> 
-  rename(sampling_method = sampling_method_e_dna_or_fish_or_both)
+# dat_2025 = dat_2025 |> 
+#   tidyr::separate_longer_delim(cols = sampling_method_e_dna_or_fish_or_both, delim = " and ") |> 
+#   rename(sampling_method = sampling_method_e_dna_or_fish_or_both)
 
 dat_2025 <- dat_2025 |>
   mutate(

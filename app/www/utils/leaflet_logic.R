@@ -209,7 +209,7 @@ output$my_leaf_2024 <- renderLeaflet({
     addPolygons(data = subw, color = "grey", weight = 1.5, fill = "transparent", label = ~watershed_name) %>%
     addPolygons(data = col, color = "purple", weight = 1.5, fill = "transparent", options = pathOptions(clickable = FALSE)) %>%
     addResetMapButton() %>%
-    addScaleBar("bottomright")
+    addScaleBar("bottomleft")
 })
 
 output$my_leaf_2025 <- renderLeaflet({
@@ -226,7 +226,7 @@ output$my_leaf_2025 <- renderLeaflet({
     addPolygons(data = subw, color = "grey", weight = 1.5, fill = "transparent", label = ~watershed_name) %>%
     addPolygons(data = col, color = "purple", weight = 1.5, fill = "transparent", options = pathOptions(clickable = FALSE)) %>%
     addResetMapButton() %>%
-    addScaleBar("bottomright")
+    addScaleBar("bottomleft")
 })
 
 # ----------------------------
@@ -367,4 +367,262 @@ observe({
   # Add the legend
   l <- l %>% addControl(html = full_legend, position = "topright")
 })
+
+
+#---------------------------
+# Lets make new leaflets. We need one for 2024 edna, one for 2024 fish, 2025 edna, one for 2025 fish
+# We should split the data first, then make the leaflet objects. 
+
+edna_2024 = dat |> 
+  filter(sampling_method == "eDNA")
+fish_2024 = dat |> 
+  filter(sampling_method == "Fish")  
+edna_2025 = dat_2025 |> 
+  filter(sampling_method == "eDNA")
+fish_2025 = dat_2025 |> 
+  filter(sampling_method == "Fish")
+edna_2025 <- edna_2025 |> 
+  filter(!is.na(e_dna_results_mc))
+
+
+fish_2025 <- fish_2025 |> 
+  mutate(
+    fish_sampling_results_q_pcr_mc_detected = case_when(
+      is.na(fish_sampling_results_q_pcr_mc_detected) ~ "Waiting Results",
+      TRUE ~ fish_sampling_results_q_pcr_mc_detected
+    )
+  )
+
+
+dat_2025 <- dat_2025 %>%
+  # Colour by sample type
+  mutate(sample_type_colour = case_when(
+    sampling_method == "eDNA" ~ 'gold',
+    sampling_method == "Fish" ~ 'salmon',
+    sampling_method == "Fish + eDNA" ~ 'orange',  # optional
+    TRUE ~ 'black'
+  )) %>%
+  # Standardized result colours for both fish and eDNA
+  mutate(result_colour = case_when(
+    fish_sampling_results_q_pcr_mc_detected == "Negative" ~ "purple",
+    fish_sampling_results_q_pcr_mc_detected == "Positive" ~ "orange",
+    fish_sampling_results_q_pcr_mc_detected == "Waiting Results" ~ "grey",
+    e_dna_results_mc == "Negative" ~ "purple",
+    e_dna_results_mc == "Positive" ~ "orange",
+    e_dna_results_mc == "Waiting Results" ~ "grey",
+    TRUE ~ "black"
+  ))
+
+
+dat <- dat %>%
+  # Colour by sample type
+  mutate(sample_type_colour = case_when(
+    sampling_method == "eDNA" ~ 'gold',
+    sampling_method == "Fish" ~ 'salmon',
+    sampling_method == "Fish + eDNA" ~ 'orange',  # optional
+    TRUE ~ 'black'
+  )) %>%
+  # Standardized result colours for both fish and eDNA
+  mutate(result_colour = case_when(
+    fish_sampling_results_q_pcr_mc_detected == "Negative" ~ "purple",
+    fish_sampling_results_q_pcr_mc_detected == "Positive" ~ "orange",
+    fish_sampling_results_q_pcr_mc_detected == "Waiting Results" ~ "grey",
+    e_dna_results_mc == "Negative" ~ "purple",
+    e_dna_results_mc == "Positive" ~ "orange",
+    e_dna_results_mc == "Waiting Results" ~ "grey",
+    TRUE ~ "black"
+  ))
+
+
+fish_2024 <- fish_2024 %>%
+  mutate(fish_result = case_when(
+    fish_sampling_results_q_pcr_mc_detected == "Positive" ~ "Positive",
+    fish_sampling_results_q_pcr_mc_detected == "Negative" ~ "Negative",
+    fish_sampling_results_q_pcr_mc_detected %in% c("Pending","Waiting Results") ~ "Waiting Results",
+    TRUE ~ "Waiting Results"
+  ))
+
+edna_2024 <- edna_2024 %>%
+  mutate(edna_result = case_when(
+    e_dna_results_mc == "Positive" ~ "Positive",
+    e_dna_results_mc == "Negative" ~ "Negative",
+    e_dna_results_mc %in% c("Pending","Waiting Results") ~ "Waiting Results",
+    TRUE ~ "Waiting Results"
+  ))
+
+fish_2025 <- fish_2025 %>%
+  mutate(fish_result = case_when(
+    fish_sampling_results_q_pcr_mc_detected == "Positive" ~ "Positive",
+    fish_sampling_results_q_pcr_mc_detected == "Negative" ~ "Negative",
+    fish_sampling_results_q_pcr_mc_detected %in% c("Pending","Waiting Results") ~ "Waiting Results",
+    TRUE ~ "Waiting Results"
+  ))
+
+edna_2025 <- edna_2025 %>%
+  mutate(edna_result = case_when(
+    e_dna_results_mc == "Positive" ~ "Positive",
+    e_dna_results_mc == "Negative" ~ "Negative",
+    e_dna_results_mc %in% c("Pending","Waiting Results") ~ "Waiting Results",
+    TRUE ~ "Waiting Results"
+  ))
+
+
+result_cols <- c(
+  "Positive" = "orange",
+  "Negative" = "purple",
+  "Waiting Results" = "grey"
+)
+
+# For fish 2025 (include Waiting Results)
+pal_fish_2025 <- colorFactor(
+  #palette = c("Positive" = "orange", "Negative" = "purple", "Waiting Results" = "grey"),
+  #levels = c("Positive", "Negative", "Waiting Results")
+  palette = c("Positive" = "orange", "Negative" = "purple"),
+  levels = c("Positive", "Negative")
+)
+
+# For all other maps (no Waiting Results)
+pal_no_waiting <- colorFactor(
+  palette = c("Positive" = "orange", "Negative" = "purple"),
+  levels = c("Positive", "Negative")
+)
+
+output$my_leaf_2024_fish <- renderLeaflet({
+  leaflet(fish_2024) %>%
+    addTiles() %>%
+    addMapPane("watersheds", zIndex = 300) %>%
+    addPolygons(
+      data = subw, color = "grey", weight = 1.5,
+      fill = "transparent", label = ~watershed_name,
+      options = pathOptions(pane = "watersheds")
+    ) %>%
+    addMapPane("boundaries", zIndex = 400) %>%
+    addPolygons(
+      data = col, color = "purple", weight = 1.5,
+      fill = "transparent", options = pathOptions(clickable = FALSE, pane = "boundaries")
+    ) %>%
+    addMapPane("points", zIndex = 500) %>%
+    addCircleMarkers(
+      lng = ~sf::st_coordinates(geom)[,1],
+      lat = ~sf::st_coordinates(geom)[,2],
+      fillColor = ~pal_no_waiting(fish_result),
+      color = "black",
+      fillOpacity = 0.8,
+      radius = 10,
+      label = lapply(make_leaf_tbl_2024(fish_2024), htmltools::HTML),
+      options = pathOptions(pane = "points")
+    ) %>%
+    addLegend(
+      "bottomleft",
+      pal = pal_no_waiting,
+      values = c("Positive", "Negative"),
+      title = "Fish Sampling Result",
+      opacity = 1
+    )
+})
+
+output$my_leaf_2024_edna <- renderLeaflet({
+  leaflet(edna_2024) %>%
+    addTiles() %>%
     
+    addMapPane("watersheds", zIndex = 300) %>%
+    addPolygons(
+      data = subw,
+      color = "grey", weight = 1.5,
+      fill = "transparent", label = ~watershed_name,
+      options = pathOptions(pane = "watersheds")
+    ) %>%
+    
+    addMapPane("boundaries", zIndex = 400) %>%
+    addPolygons(
+      data = col,
+      color = "purple", weight = 1.5,
+      fill = "transparent",
+      options = pathOptions(clickable = FALSE, pane = "boundaries")
+    ) %>%
+    
+    addMapPane("points", zIndex = 500) %>%
+    addCircleMarkers(
+      lng = ~sf::st_coordinates(geom)[,1],
+      lat = ~sf::st_coordinates(geom)[,2],
+      fillColor = ~pal_no_waiting(edna_result),
+      color = "black",
+      fillOpacity = 0.8,
+      radius = 10,
+      label = lapply(make_leaf_tbl_2024(edna_2024), htmltools::HTML),
+      options = pathOptions(pane = "points")
+    ) %>%
+    
+    addLegend(
+      "bottomleft",
+      pal = pal_no_waiting,
+      values = c("Positive", "Negative"),
+      title = "eDNA Result - M. cerebralis",
+      opacity = 1
+    )
+})
+output$my_leaf_2025_fish <- renderLeaflet({
+  leaflet(fish_2025) %>%
+    addTiles() %>%
+    addMapPane("watersheds", zIndex = 300) %>%
+    addPolygons(
+      data = subw, color = "grey", weight = 1.5,
+      fill = "transparent", options = pathOptions(pane = "watersheds")
+    ) %>%
+    addMapPane("boundaries", zIndex = 400) %>%
+    addPolygons(
+      data = col, color = "purple", weight = 1.5,
+      fill = "transparent", options = pathOptions(clickable = FALSE, pane = "boundaries")
+    ) %>%
+    addMapPane("points", zIndex = 500) %>%
+    addCircleMarkers(
+      lng = ~sf::st_coordinates(geom)[,1],
+      lat = ~sf::st_coordinates(geom)[,2],
+      fillColor = ~pal_fish_2025(fish_result),
+      color = "black",
+      fillOpacity = 0.8,
+      radius = 10,
+      label = lapply(make_leaf_tbl_2025(fish_2025), htmltools::HTML),
+      options = pathOptions(pane = "points")
+    ) %>%
+    addLegend(
+      "bottomleft",
+      pal = pal_fish_2025,
+      values = c("Positive", "Negative", "Waiting Results"),
+      title = "Fish Sampling Result",
+      opacity = 1
+    )
+})
+output$my_leaf_2025_edna <- renderLeaflet({
+  leaflet(edna_2025) %>%
+    addTiles() %>%
+    addMapPane("watersheds", zIndex = 300) %>%
+    addPolygons(
+      data = subw, color = "grey", weight = 1.5,
+      fill = "transparent", label = ~watershed_name,
+      options = pathOptions(pane = "watersheds")
+    ) %>%
+    addMapPane("boundaries", zIndex = 400) %>%
+    addPolygons(
+      data = col, color = "purple", weight = 1.5,
+      fill = "transparent", options = pathOptions(clickable = FALSE, pane = "boundaries")
+    ) %>%
+    addMapPane("points", zIndex = 500) %>%
+    addCircleMarkers(
+      lng = ~sf::st_coordinates(geom)[,1],
+      lat = ~sf::st_coordinates(geom)[,2],
+      fillColor = ~pal_no_waiting(edna_result),
+      color = "black",
+      fillOpacity = 0.8,
+      radius = 10,
+      label = lapply(make_leaf_tbl_2025(edna_2025), htmltools::HTML),
+      options = pathOptions(pane = "points")
+    ) %>%
+    addLegend(
+      "bottomleft",
+      pal = pal_no_waiting,
+      values = c("Positive", "Negative"),
+      title = "eDNA Result - M. cerebralis",
+      opacity = 1
+    )
+})
