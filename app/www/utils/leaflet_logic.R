@@ -275,7 +275,7 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
     #   options = pathOptions(pane = "points")
     # ) %>%
     addMarkers(
-      data = dat_2024 |> shunt_dat(data_type = "2024"),
+      data = dat_2024,
       lng = ~sf::st_coordinates(geom)[,1],
       lat = ~sf::st_coordinates(geom)[,2],
       icon = ~marker_icons[icon_type],
@@ -286,7 +286,7 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
     ) |> 
     # Points for 2025
     addMarkers(
-      data = dat_2025|> shunt_dat(data_type = "2025"),
+      data = dat_2025,
       lng = ~sf::st_coordinates(geom)[,1],
       lat = ~sf::st_coordinates(geom)[,2],
       icon = ~marker_icons[icon_type],
