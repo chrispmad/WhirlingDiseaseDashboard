@@ -4,6 +4,7 @@
 dat = sf::read_sf("www/sampling_results.gpkg")
 col = sf::read_sf("www/columbia_watershed.gpkg")
 subw = sf::read_sf("www/subwatershed_groups.gpkg")
+dat_2025 = sf::read_sf("www/sampling_results_2025.gpkg")
 
 # Remove sites that weren't sampled.
 dat = dat |> dplyr::filter(stringr::str_detect(sampled_in_2024_y_n, "^Y"))
@@ -44,7 +45,7 @@ dat = dat |>
 rm(dat_no_results)
 
 # Temporary correction to highlight NAs in dataset:
-dat = dat |> mutate(sampling_method = tidyr::replace_na(sampling_method, "NA"))
+dat = dat |> dplyr::mutate(sampling_method = tidyr::replace_na(sampling_method, "NA"))
 
 # Relabel the geometry column.
 dat = sf::st_set_geometry(dat, "geom")
@@ -67,17 +68,16 @@ dat = dat |>
   dplyr::mutate(e_dna_tubifex_colour = ifelse(e_dna_results_tubifex == "Positive", "#F97912", "#612073"))
 
 dat = dat |> 
-  mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
+  dplyr::mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
 
 #-----------------------------------------------------------------------------------------------------------
 
 
-dat_2025 = sf::read_sf("www/sampling_results_2025.gpkg")
 
 dat_2025 = dat_2025 |> dplyr::filter(stringr::str_detect(confirmed_to_have_been_sampled_in_2025_y_n, "^Y"))
 
 dat_2025 = dat_2025 |> 
-  rename(reach = sub_watershed_reach_name, sample_site_name = final_sample_site_name,
+  dplyr::rename(reach = sub_watershed_reach_name, sample_site_name = final_sample_site_name,
          delivery_agency = sampling_organization, sampled_in_2025_y_n = confirmed_to_have_been_sampled_in_2025_y_n,
          e_dna_results_mc = result_mc, e_dna_results_tubifex = result_tubifex)
 
@@ -105,7 +105,7 @@ dat_no_results_2025 = dat_2025 |>
 
 ## Placeholder as this is not in the results
 dat_2025 = dat_2025 |> 
-  rename(fish_species_sampled = fish_species)
+  dplyr::rename(fish_species_sampled = fish_species)
 
 
 dat_2025 = dat_2025 |> 
@@ -125,7 +125,7 @@ dat_2025 = dat_2025 |>
   dplyr::mutate(e_dna_tubifex_colour = ifelse(e_dna_results_tubifex == "Positive", "#F97912", "#612073"))
 
 dat_2025 = dat_2025 |> 
-  mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
+  dplyr::mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
 
 
 
@@ -133,7 +133,18 @@ dat_2025 = dat_2025 |>
 # New request - no more tubifex
 
 dat = dat |> 
-  select(-e_dna_results_tubifex)
+  dplyr::select(-e_dna_results_tubifex) |> 
+  dplyr::mutate(Year = 2024)
 
 dat_2025 = dat_2025 |> 
-  select(-e_dna_results_tubifex)
+  dplyr::select(-e_dna_results_tubifex) |> 
+  dplyr::mutate(Year = 2025)
+
+#---- combine the data ------#
+dat_all = dplyr::bind_rows(dat,dat_2025) 
+
+dat_all = dat_all |> 
+  dplyr::select(-c(original_lat,original_long))
+
+fish_data <- dat_all |> dplyr::filter(sampling_method == "Fish")
+edna_data <- dat_all |> dplyr::filter(sampling_method == "eDNA")
