@@ -1,20 +1,7 @@
+library(shiny)
 library(shinymanager)
 library(bslib)
 library(leaflet)
-library(leaflet.extras)
-library(tidyverse)
-
-download_ui <- function(year) {
-  div(
-    downloadButton(
-      outputId = paste0("data_dl_", year),
-      label = "Download Dashboard Data",
-      class = "download-data-btn"
-    ),
-    p(textOutput(paste0("file_update_date_", year))),
-    class = "data-update-text"
-  )
-}
 
 creds <- data.frame(read.table("www/creds.txt", sep = ",", header = T))
 
@@ -25,56 +12,67 @@ credentials <- data.frame(
   stringsAsFactors = FALSE
 )
 
-
 ui <- secure_app(
   fluidPage(
     theme = bs_theme(bootswatch = "flatly", version = 5),
-    shiny::includeCSS("www/my_styles.css"),
+    
     titlePanel("Whirling Disease Results"),
     
-    # YEAR-level tabs (this stays tied to active_tab)
-    tabsetPanel(
-      id = "active_tab",
-      
-      # -------- 2024 --------
-      tabPanel(
-        title = "2024 Results",
-        download_ui("2024"),
-        tabsetPanel(
-          id = "subtab_2024",
+    tags$style(HTML("
+  .btn-forest {
+    background-color: #1b5e20;  /* forest green */
+    border-color: #1b5e20;
+    color: #ffffff;
+  }
+
+  .btn-forest:hover,
+  .btn-forest:focus {
+    background-color: #144d18;  /* slightly darker */
+    border-color: #144d18;
+    color: #ffffff;
+  }
+")),
+    
+    fluidRow(
+      column(
+        width = 12,
+        div(
+          style = "display:flex; justify-content:flex-end; gap:10px; margin-bottom:10px;",
           
-          tabPanel(
-            title = "Fish",
-            leafletOutput("my_leaf_2024_fish")
+          downloadButton(
+            "data_dl_2024",
+            "2024 data",
+            class = "btn btn-forest"
           ),
           
-          tabPanel(
-            title = "eDNA - M. cerebralis",
-            leafletOutput("my_leaf_2024_edna")
+          downloadButton(
+            "data_dl_2025",
+            "2025 data",
+            class = "btn btn-forest"
           )
         )
+      )
+    ),
+    
+    # ----------------------------
+    # Data type tabs
+    # ----------------------------
+    tabsetPanel(
+      id = "data_type",
+      
+      tabPanel(
+        title = "Fish",
+        value = "fish",
+        # Single leaflet for all Fish layers (2024 + 2025)
+        leafletOutput("leaf_fish", height = "80vh")
       ),
       
-      # -------- 2025 --------
       tabPanel(
-        title = "2025 Results",
-        download_ui("2025"),
-        tabsetPanel(
-          id = "subtab_2025",
-          
-          tabPanel(
-            title = "Fish",
-            
-            leafletOutput("my_leaf_2025_fish")
-          ),
-          
-          tabPanel(
-            title = "eDNA - M. cerebralis",
-            leafletOutput("my_leaf_2025_edna")
-          )
-        )
+        title = "eDNA – M. cerebralis",
+        value = "edna",
+        # Single leaflet for all eDNA layers (2024 + 2025)
+        leafletOutput("leaf_edna", height = "80vh")
       )
     )
   )
 )
-
