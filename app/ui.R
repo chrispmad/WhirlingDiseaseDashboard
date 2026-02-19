@@ -72,7 +72,14 @@ ui <- secure_app(
         value = "edna",
         # Single leaflet for all eDNA layers (2024 + 2025)
         leafletOutput("leaf_edna", height = "80vh")
+      ),
+      tabPanel(
+        title = "Sampling Coverage - All Years",
+        value = "all_years",
+        # Single leaflet for all eDNA layers (2024 + 2025)
+        leafletOutput("leaf_all_data", height = "80vh")
       )
+      
     )
   )
 )
