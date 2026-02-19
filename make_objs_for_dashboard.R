@@ -63,17 +63,27 @@ sf::write_sf(subw,'app/www/subwatershed_groups.gpkg')
 
 ## get the 2025 data 
 
-dat_2025_edna = read_excel("data/Whirling_Disease_2025_Sample_Tracking_correct_coords.xlsx", sheet = "eDNA")
+dat_2025_edna = read_excel("data/Whirling_Disease_2025_Sample_Tracking editing.xlsx", sheet = "eDNA")
 
-dat_2025_fish = read_excel("data/Whirling_Disease_2025_Sample_Tracking_correct_coords.xlsx", sheet = "Fish")
+dat_2025_fish = read_excel("data/Whirling_Disease_2025_Sample_Tracking editing.xlsx", sheet = "Fish",guess_max = 0, col_types = "text")
 
+dat_2025_fish$`Date Collected` <-
+  ifelse(
+    grepl("^\\d+$", dat_2025_fish$`Date Collected`),  # only pure numbers
+    format(
+      as.Date(as.numeric(dat_2025_fish$`Date Collected`),
+              origin = "1899-12-30"),
+      "%d/%m/%Y"
+    ),
+    dat_2025_fish$`Date Collected`
+  )
 
-
-dat_2025_edna = purrr::set_names(dat_2025_edna, snakecase::to_snake_case)
+dat_2025_edna = purrr::set_names(dat_2025_edna, snakecase::to_snake_case) |> 
+  mutate(date_collected = as.Date(date_collected, origin = "1899-12-30"))
 
 dat_2025_edna = dat_2025_edna |> filter(!is.na(latitude) & !is.na(longitude))
 
-dat_2025_fish = purrr::set_names(dat_2025_fish, snakecase::to_snake_case)
+dat_2025_fish = purrr::set_names(dat_2025_fish, snakecase::to_snake_case) 
 
 dat_2025_fish = dat_2025_fish |> filter(!is.na(latitude) & !is.na(longitude))
 
