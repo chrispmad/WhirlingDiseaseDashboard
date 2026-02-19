@@ -75,6 +75,13 @@ dat = dat |>
     delivery_agency = dplyr::case_when(
       delivery_agency == "ONA (Eleanor)" ~ "ONA",
       delivery_agency == "ONA (Sam)" ~ "ONA",
+      delivery_agency == "WLRS - AEB fisheries" ~ "WLRS",
+      delivery_agency == "WLRS (COS AIS inspectors)" ~ "WLRS",
+      delivery_agency == "WLRS - region 3" ~ "WLRS",
+      delivery_agency == "WLRS (headquarters)" ~ "WLRS",
+      delivery_agency == "WLRS - Kootenay region" ~ "WLRS",
+      delivery_agency == "WLRS Cultus" ~ "WLRS",
+      delivery_agency == "WLRS Region 2" ~ "WLRS",
       TRUE ~ delivery_agency
     )
   )
@@ -142,6 +149,13 @@ dat_2025 = dat_2025 |>
     delivery_agency = dplyr::case_when(
       delivery_agency == "ONA (Eleanor)" ~ "ONA",
       delivery_agency == "ONA (Sam)" ~ "ONA",
+      delivery_agency == "WLRS - AEB fisheries" ~ "WLRS",
+      delivery_agency == "WLRS (COS AIS inspectors)" ~ "WLRS",
+      delivery_agency == "WLRS - region 3" ~ "WLRS",
+      delivery_agency == "WLRS (headquarters)" ~ "WLRS",
+      delivery_agency == "WLRS - Kootenay region" ~ "WLRS",
+      delivery_agency == "WLRS Cultus" ~ "WLRS",
+      delivery_agency == "WLRS Region 2" ~ "WLRS",
       TRUE ~ delivery_agency
     )
   )
@@ -168,6 +182,13 @@ dat_all = dat_all |>
     delivery_agency = dplyr::case_when(
       delivery_agency == "ONA (Eleanor)" ~ "ONA",
       delivery_agency == "ONA (Sam)" ~ "ONA",
+      delivery_agency == "WLRS - AEB fisheries" ~ "WLRS",
+      delivery_agency == "WLRS (COS AIS inspectors)" ~ "WLRS",
+      delivery_agency == "WLRS - region 3" ~ "WLRS",
+      delivery_agency == "WLRS (headquarters)" ~ "WLRS",
+      delivery_agency == "WLRS - Kootenay region" ~ "WLRS",
+      delivery_agency == "WLRS Cultus" ~ "WLRS",
+      delivery_agency == "WLRS Region 2" ~ "WLRS",
       TRUE ~ delivery_agency
     )
   )
