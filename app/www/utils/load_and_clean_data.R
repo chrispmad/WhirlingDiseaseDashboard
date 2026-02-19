@@ -70,6 +70,16 @@ dat = dat |>
 dat = dat |> 
   dplyr::mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
 
+dat = dat |> 
+  dplyr::mutate(
+    delivery_agency = dplyr::case_when(
+      delivery_agency == "ONA (Eleanor)" ~ "ONA",
+      delivery_agency == "ONA (Sam)" ~ "ONA",
+      TRUE ~ delivery_agency
+    )
+  )
+
+
 #-----------------------------------------------------------------------------------------------------------
 
 
@@ -127,7 +137,14 @@ dat_2025 = dat_2025 |>
 dat_2025 = dat_2025 |> 
   dplyr::mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
 
-
+dat_2025 = dat_2025 |> 
+  dplyr::mutate(
+    delivery_agency = dplyr::case_when(
+      delivery_agency == "ONA (Eleanor)" ~ "ONA",
+      delivery_agency == "ONA (Sam)" ~ "ONA",
+      TRUE ~ delivery_agency
+    )
+  )
 
 #------------
 # New request - no more tubifex
@@ -146,5 +163,17 @@ dat_all = dplyr::bind_rows(dat,dat_2025)
 dat_all = dat_all |> 
   dplyr::select(-c(original_lat,original_long))
 
+dat_all = dat_all |> 
+  dplyr::mutate(
+    delivery_agency = dplyr::case_when(
+      delivery_agency == "ONA (Eleanor)" ~ "ONA",
+      delivery_agency == "ONA (Sam)" ~ "ONA",
+      TRUE ~ delivery_agency
+    )
+  )
+
 fish_data <- dat_all |> dplyr::filter(sampling_method == "Fish")
 edna_data <- dat_all |> dplyr::filter(sampling_method == "eDNA")
+
+
+
