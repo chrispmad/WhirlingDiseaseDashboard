@@ -147,23 +147,23 @@ year_legend <- HTML(
 result_cols <- c("Positive" = "orange", "Negative" = "blue")
 pal_fish <- colorFactor(palette = result_cols, levels = names(result_cols))
 pal_edna <- colorFactor(palette = result_cols, levels = names(result_cols))
+pal_both = colorFactor(palette = result_cols, levels = names(result_cols))
 
-
-make_leaf_tbl = function(dat){
-  dat |> 
-    dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
-                  Longitude = sf::st_coordinates(geom)[,1]) |> 
-    sf::st_drop_geometry() |> 
-    dplyr::select(`Sample Site` = sample_site_name,
-                  Latitude,
-                  Longitude,
-                  `Sampling Method` = sampling_method,
-                  `Fish Species Sampled` = fish_species_sampled,
-                  `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-                  `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
-                  `eDNA Sampling Results (Tubifex worm)` = e_dna_results_tubifex) |> 
-    leafpop::popupTable()
-}
+# make_leaf_tbl = function(dat){
+#   dat |> 
+#     dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
+#                   Longitude = sf::st_coordinates(geom)[,1]) |> 
+#     sf::st_drop_geometry() |> 
+#     dplyr::select(`Sample Site` = sample_site_name,
+#                   Latitude,
+#                   Longitude,
+#                   `Sampling Method` = sampling_method,
+#                   `Fish Species Sampled` = fish_species_sampled,
+#                   `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
+#                   `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
+#                   `eDNA Sampling Results (Tubifex worm)` = e_dna_results_tubifex) |> 
+#     leafpop::popupTable()
+# }
 
 
 marker_icons <- leaflet::iconList(
@@ -174,20 +174,28 @@ marker_icons <- leaflet::iconList(
   
 )
 
-make_leaf_tbl = function(dat){
+make_leaf_tbl <- function(dat){
   
   dat |> 
-    dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
-                  Longitude = sf::st_coordinates(geom)[,1]) |> 
+    dplyr::mutate(
+      Latitude  = sf::st_coordinates(geom)[,2],
+      Longitude = sf::st_coordinates(geom)[,1]
+    ) |> 
     sf::st_drop_geometry() |> 
-    dplyr::select(`Sample Site` = sample_site_name,
-                  Latitude,
-                  Longitude,
-                  `Sampling Method` = sampling_method,
-                  `Fish Species Sampled` = fish_species_sampled,
-                  `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-                  `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
-                  Year = Year) |> 
+    dplyr::select(
+      `Sample Site` = sample_site_name,
+      Latitude,
+      Longitude,
+      `Sampling Method` = sampling_method,
+      `Fish Species Sampled` = fish_species_sampled,
+      `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
+      `eDNA Sampling Results (M. cerebralis – parasite)` = e_dna_results_mc,
+      `Volume(s) Sampled (l)` = volume_sampled,
+      `Filter Size(s) (µm)` = filter_size,
+      `Agency` = delivery_agency,
+      `Date Collected` = date_collected,
+      Year
+    ) |> 
     leafpop::popupTable()
 }
 
@@ -315,6 +323,137 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
     )
 }
 
+make_leaf_tbl_both = function(dat){
+  
+  dat |> 
+    dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
+                  Longitude = sf::st_coordinates(geom)[,1]) |> 
+    sf::st_drop_geometry() |> 
+    dplyr::select(
+                  `Year Sampled` = Year,
+                  `Sampling Method` = sampling_method,
+                  `Sample Site` = sample_site_name,
+                  Latitude,
+                  Longitude,,
+                  `Delivery Agency` = delivery_agency,
+                  `Fish Species Sampled` = fish_species_sampled,
+                  `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
+                  `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc
+                  ) |> 
+    leafpop::popupTable()
+}
+
+
+make_all_years = function(dat, leaflet_id){
+  
+  
+  dat_plot <- dat |>
+    dplyr::mutate(
+      icon_type = dplyr::case_when(
+        Year == 2025 & sampling_method == "Fish" &
+          fish_sampling_results_q_pcr_mc_detected == "Positive" ~ "pos_2025",
+        
+        Year == 2025 & sampling_method == "eDNA" &
+          e_dna_results_mc == "Positive" ~ "pos_2025",
+        
+        Year == 2025 & sampling_method %in% c("Fish", "eDNA") ~ "neg_2025",
+        
+        Year == 2024 & sampling_method == "Fish" &
+          fish_sampling_results_q_pcr_mc_detected == "Positive" ~ "pos_2024",
+        
+        Year == 2024 & sampling_method == "eDNA" &
+          e_dna_results_mc == "Positive" ~ "pos_2024",
+        
+        Year == 2024 & sampling_method %in% c("Fish", "eDNA") ~ "neg_2024",
+        
+        TRUE ~ NA_character_
+      )
+    )
+  
+  
+  type = "All"
+  dat_tbl_all = make_leaf_tbl_both(dat_plot)
+  
+  
+  
+  leaflet(dat_plot) %>%
+    addTiles() %>%
+    # Watersheds
+    addMapPane("watersheds", zIndex = 300) %>%
+    addPolygons(
+      data = subw,
+      color = "grey",
+      weight = 1.5,
+      fill = "transparent",
+      label = ~watershed_name,
+      options = pathOptions(pane = "watersheds")
+    ) %>%
+    
+    # Boundaries
+    addMapPane("boundaries", zIndex = 400) %>%
+    addPolygons(
+      data = col,
+      color = "purple",
+      weight = 1.5,
+      fill = "transparent",
+      options = pathOptions(clickable = FALSE, pane = "boundaries")
+    ) %>%
+    # Points for 2024
+    addMapPane("points", zIndex = 500) %>%
+    # addCircleMarkers(
+    #   data = dat_2024,
+    #   lng = ~sf::st_coordinates(geom)[,1],
+    #   lat = ~sf::st_coordinates(geom)[,2],
+    #   color = "black",
+    #   fillColor = if(type=="Fish") ~pal_fish(fish_sampling_results_q_pcr_mc_detected)
+    #   else ~pal_edna(e_dna_results_mc),
+    #   fillOpacity = 0.8,
+    #   radius = 10,
+    #   label = lapply(tbl_2024, htmltools::HTML),
+    #   group = paste0(type, " 2024"),
+    #   options = pathOptions(pane = "points")
+    # ) %>%
+    addMarkers(
+      data = dplyr::filter(dat_plot, Year == 2024),
+      lng = ~sf::st_coordinates(geom)[,1],
+      lat = ~sf::st_coordinates(geom)[,2],
+      icon = ~marker_icons[icon_type],
+      label = lapply(dat_tbl_all[dat_plot$Year == 2024], htmltools::HTML),
+      group = paste0(type, " 2024"),
+      options = pathOptions(pane = "points")
+    ) |> 
+    # Points for 2025
+    addMarkers(
+      data = dplyr::filter(dat_plot, Year == 2025),
+      lng = ~sf::st_coordinates(geom)[,1],
+      lat = ~sf::st_coordinates(geom)[,2],
+      icon = ~marker_icons[icon_type],
+      label = lapply(dat_tbl_all[dat_plot$Year == 2025], htmltools::HTML),
+      group = paste0(type, " 2025"),
+      options = pathOptions(pane = "points")
+    )|> 
+    
+    # Layers control for years
+    addLayersControl(
+      overlayGroups = c(paste0(type, " 2024"), paste0(type, " 2025")),
+      options = layersControlOptions(collapsed = FALSE)
+    ) %>%
+    
+    # Legend
+    addLegend(
+      "bottomleft",
+      pal = pal_both,
+      values = names(result_cols),
+      title = paste(type, "Result"),
+      opacity = 1
+    ) |> 
+    addControl(
+      year_legend,
+      position = "bottomleft"
+    )
+  
+}
+
 # --------------------------------------
 # Render Leaflets
 # --------------------------------------
@@ -324,4 +463,9 @@ output$leaf_fish <- renderLeaflet({
 
 output$leaf_edna <- renderLeaflet({
   make_leaflet(edna_data, type = "eDNA", leaflet_id = "leaf_edna")
+})
+
+
+output$leaf_all_data <- renderLeaflet({
+  make_all_years(dat_all, leaflet_id = "leaf_all_data")
 })
