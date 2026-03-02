@@ -171,6 +171,9 @@ dat_2025 = dat_2025 |>
   dplyr::select(-e_dna_results_tubifex) |> 
   dplyr::mutate(Year = 2025)
 
+
+dat = dat |> 
+  dplyr::mutate(date_collected = as.character(date_collected))
 #---- combine the data ------#
 dat_all = dplyr::bind_rows(dat,dat_2025) 
 
