@@ -27,6 +27,15 @@ dat = read_excel('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSE
 
 dat = purrr::set_names(dat, snakecase::to_snake_case)
 
+dat <- dat |>
+  dplyr::mutate(date_collected = as.numeric(date_collected)) |> 
+  dplyr::mutate(
+    date_collected = dplyr::case_when(
+      is.numeric(date_collected) ~ as.Date(date_collected, origin = "1899-12-30"),
+      TRUE ~ as.Date(date_collected)
+    )
+  )
+
 dat = dat |> filter(!is.na(lat) & !is.na(long))
 
 # Split rows that have both eDNA and fish sampling into two rows each.
@@ -39,6 +48,9 @@ dat = sf::st_as_sf(dat, coords = c("long","lat"), crs = 4326)
 dat = dat |> 
   dplyr::mutate(fish_sampling_results_q_pcr_mc_detected = ifelse(str_detect(fish_sampling_results_q_pcr_mc_detected,"Positive"),"Positive",fish_sampling_results_q_pcr_mc_detected)) |> 
   dplyr::mutate(comments = ifelse(comments == '', NA, comments))
+
+dat = dat |> 
+  filter(sampled_in_2024_y_n == "Y" | sampled_in_2024_y_n == "Y (Alternate site to Columbia River)")
 
 if(file.exists('app/www/sampling_results.gpkg')) file.remove('app/www/sampling_results.gpkg')
 sf::write_sf(dat, 'app/www/sampling_results.gpkg')
@@ -63,9 +75,9 @@ sf::write_sf(subw,'app/www/subwatershed_groups.gpkg')
 
 ## get the 2025 data 
 
-dat_2025_edna = read_excel("data/Whirling_Disease_2025_Sample_Tracking editing.xlsx", sheet = "eDNA")
+dat_2025_edna = read_excel("data/Whirling_Disease_2025_Sample_Tracking Final.xlsx", sheet = "eDNA with Dates")
 
-dat_2025_fish = read_excel("data/Whirling_Disease_2025_Sample_Tracking editing.xlsx", sheet = "Fish",guess_max = 0, col_types = "text")
+dat_2025_fish = read_excel("data/Whirling_Disease_2025_Sample_Tracking Final.xlsx", sheet = "Fish with Dates",guess_max = 0, col_types = "text")
 
 dat_2025_fish$`Date Collected` <-
   ifelse(
@@ -78,8 +90,18 @@ dat_2025_fish$`Date Collected` <-
     dat_2025_fish$`Date Collected`
   )
 
-dat_2025_edna = purrr::set_names(dat_2025_edna, snakecase::to_snake_case) |> 
-  mutate(date_collected = as.Date(date_collected, origin = "1899-12-30"))
+dat_2025_edna$`Date Collected` <-
+  ifelse(
+    grepl("^\\d+$", dat_2025_edna$`Date Collected`),  # only pure numbers
+    format(
+      as.Date(as.numeric(dat_2025_edna$`Date Collected`),
+              origin = "1899-12-30"),
+      "%d/%m/%Y"
+    ),
+    dat_2025_edna$`Date Collected`
+  )
+
+dat_2025_edna = purrr::set_names(dat_2025_edna, snakecase::to_snake_case) 
 
 dat_2025_edna = dat_2025_edna |> filter(!is.na(latitude) & !is.na(longitude))
 
@@ -87,8 +109,8 @@ dat_2025_fish = purrr::set_names(dat_2025_fish, snakecase::to_snake_case)
 
 dat_2025_fish = dat_2025_fish |> filter(!is.na(latitude) & !is.na(longitude))
 
-dat_2025_fish = dat_2025_fish |> 
-  rename(fish_sampling_results_q_pcr_mc_detected = result)
+# dat_2025_fish = dat_2025_fish |> 
+#   rename(fish_sampling_results_q_pcr_mc_detected = result)
 
 dat_2025_edna = dat_2025_edna |> 
   mutate(across(everything(), as.character))
@@ -121,8 +143,14 @@ dat_2025 <- dat_2025 |>
   )
 
 ### There are 2 NA value for Vaseux Lake - we will drop them as the comments say that the lake was not sampled?
-dat_2025 = dat_2025 |> 
-  filter(latitude != "NA" & longitude != "NA")
+dat_2025 <- dat_2025 |>
+  dplyr::mutate(
+    latitude  = as.numeric(trimws(latitude)),
+    longitude = as.numeric(trimws(longitude))
+  ) |>
+  dplyr::filter(
+    (!is.na(latitude) & !is.na(longitude))
+  )
   
 dat_2025 = sf::st_as_sf(dat_2025, coords = c("longitude","latitude"), crs = 4326)
 
