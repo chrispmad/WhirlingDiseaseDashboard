@@ -99,6 +99,8 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
           fish_sampling_results_q_pcr_mc_detected =
             tidyr::replace_na(dplyr::first(fish_sampling_results_q_pcr_mc_detected), "NA"),
           e_dna_results_mc = tidyr::replace_na(dplyr::first(e_dna_results_mc), "NA"),
+          `Date Collected` =
+            paste(sort(unique(date_collected)), collapse = ", "),
           Latitude  = round(dplyr::first(Latitude), 4),
           Longitude = round(dplyr::first(Longitude), 4),
           .groups = "drop"
@@ -118,7 +120,7 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
           `Fish Species Sampled` = fish_species_sampled,
           `Fish Sampling Results` =
             fish_sampling_results_q_pcr_mc_detected,
-          
+          `Date Collected`,
           `eDNA Sampling Results (M. cerebralis - parasite)` =
             e_dna_results_mc
         )
