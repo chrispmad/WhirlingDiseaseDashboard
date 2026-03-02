@@ -174,9 +174,11 @@ marker_icons <- leaflet::iconList(
   
 )
 
-make_leaf_tbl <- function(dat){
+make_leaf_tbl <- function(dat, type = c("Fish", "eDNA")) {
   
-  dat |> 
+  type <- match.arg(type)
+  
+  dat_clean <- dat |> 
     dplyr::mutate(
       Latitude  = sf::st_coordinates(geom)[,2],
       Longitude = sf::st_coordinates(geom)[,1]
@@ -190,13 +192,33 @@ make_leaf_tbl <- function(dat){
       `Fish Species Sampled` = fish_species_sampled,
       `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
       `eDNA Sampling Results (M. cerebralis – parasite)` = e_dna_results_mc,
-      `Volume(s) Sampled (l)` = volume_sampled,
-      `Filter Size(s) (µm)` = filter_size,
       `Agency` = delivery_agency,
       `Date Collected` = date_collected,
       Year
     ) |> 
-    leafpop::popupTable()
+    
+    # ---- Replace NA with blank ----
+  dplyr::mutate(
+    dplyr::across(everything(), ~ifelse(is.na(.), "", .))
+  )
+  
+  # ---- Optionally drop irrelevant columns ----
+  if (unique(dat_clean$`Sampling Method`) == "Fish") {
+    dat_clean <- dat_clean |> 
+      dplyr::select(-`eDNA Sampling Results (M. cerebralis – parasite)`)
+  } else {
+    dat_clean <- dat_clean |> 
+      dplyr::select(-`Fish Species Sampled`,
+                    - `Fish Sampling Results`)
+  }
+  
+  
+  
+  # ---- Drop columns that are completely blank ----
+  dat_clean <- dat_clean |> 
+    dplyr::select(where(~any(trimws(as.character(.)) != "")))
+  
+  leafpop::popupTable(dat_clean)
 }
 
 # --------------------------------------
@@ -204,47 +226,31 @@ make_leaf_tbl <- function(dat){
 # --------------------------------------
 make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
   
-  dat_2025 <- dat %>%
-    dplyr::filter(Year == 2025) %>%
-    dplyr::mutate(
-      icon_type = if (type == "Fish") {
-        ifelse(
-          fish_sampling_results_q_pcr_mc_detected == "Positive",
-          "pos_2025", "neg_2025"
-        )
-      } else {
-        ifelse(
-          e_dna_results_mc == "Positive",
-          "pos_2025", "neg_2025"
-        )
-      }
-    )
-  dat_2024 <- dat %>%
-    dplyr::filter(Year == 2024) %>%
-    dplyr::mutate(
-      icon_type = if (type == "Fish") {
-        ifelse(
-          fish_sampling_results_q_pcr_mc_detected == "Positive",
-          "pos_2024", "neg_2024"
-        )
-      } else {
-        ifelse(
-          e_dna_results_mc == "Positive",
-          "pos_2024", "neg_2024"
-        )
-      }
-    )
-  
   type <- match.arg(type)
-  # making some tables for later
-  tbl_2024 = make_leaf_tbl(dat %>% dplyr::filter(Year == 2024))
-  tbl_2025 = make_leaf_tbl(dat %>% dplyr::filter(Year == 2025))
   
+  # ---- Split + prepare data ----
+  dat_split <- dat %>%
+    dplyr::filter(Year %in% c(2024, 2025)) %>%
+    dplyr::mutate(
+      icon_type = dplyr::case_when(
+        type == "Fish" & fish_sampling_results_q_pcr_mc_detected == "Positive" ~ paste0("pos_", Year),
+        type == "Fish" ~ paste0("neg_", Year),
+        type == "eDNA" & e_dna_results_mc == "Positive" ~ paste0("pos_", Year),
+        TRUE ~ paste0("neg_", Year)
+      ),
+      data_type = dplyr::if_else(sampling_method == "Fish", "Fish", "eDNA")
+    ) %>%
+    split(list(.$Year, .$data_type), drop = TRUE)
   
+  # ---- Tables ----
+  tbls <- list(
+    "2024" = make_leaf_tbl(dat %>% dplyr::filter(Year == 2024)),
+    "2025" = make_leaf_tbl(dat %>% dplyr::filter(Year == 2025))
+  )
   
-  leaflet(dat) %>%
+  # ---- Base map ----
+  m <- leaflet(dat) %>%
     addTiles() %>%
-    # Watersheds
     addMapPane("watersheds", zIndex = 300) %>%
     addPolygons(
       data = subw,
@@ -254,8 +260,6 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
       label = ~watershed_name,
       options = pathOptions(pane = "watersheds")
     ) %>%
-    
-    # Boundaries
     addMapPane("boundaries", zIndex = 400) %>%
     addPolygons(
       data = col,
@@ -264,59 +268,45 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
       fill = "transparent",
       options = pathOptions(clickable = FALSE, pane = "boundaries")
     ) %>%
+    addMapPane("points", zIndex = 500)
+  
+  # ---- Helper to safely add markers ----
+  add_safe_markers <- function(map, df, year) {
+    if (is.null(df) || nrow(df) == 0) return(map)
     
-    
-    
-    # Points for 2024
-    addMapPane("points", zIndex = 500) %>%
-    # addCircleMarkers(
-    #   data = dat_2024,
-    #   lng = ~sf::st_coordinates(geom)[,1],
-    #   lat = ~sf::st_coordinates(geom)[,2],
-    #   color = "black",
-    #   fillColor = if(type=="Fish") ~pal_fish(fish_sampling_results_q_pcr_mc_detected)
-    #   else ~pal_edna(e_dna_results_mc),
-    #   fillOpacity = 0.8,
-    #   radius = 10,
-    #   label = lapply(tbl_2024, htmltools::HTML),
-    #   group = paste0(type, " 2024"),
-    #   options = pathOptions(pane = "points")
-    # ) %>%
-    addMarkers(
-      data = dat_2024,
+    map %>% addMarkers(
+      data = df,
       lng = ~sf::st_coordinates(geom)[,1],
       lat = ~sf::st_coordinates(geom)[,2],
       icon = ~marker_icons[icon_type],
-      label = lapply(tbl_2024, htmltools::HTML),
-      
-      group = paste0(type, " 2024"),
+      label = lapply(tbls[[as.character(year)]], htmltools::HTML),
+      group = paste0(type, " ", year),
       options = pathOptions(pane = "points")
-    ) |> 
-    # Points for 2025
-    addMarkers(
-      data = dat_2025,
-      lng = ~sf::st_coordinates(geom)[,1],
-      lat = ~sf::st_coordinates(geom)[,2],
-      icon = ~marker_icons[icon_type],
-      label = lapply(tbl_2025, htmltools::HTML),
-      group = paste0(type, " 2025"),
-      options = pathOptions(pane = "points")
-    ) |> 
+    )
+  }
+  
+  # ---- Loop through all datasets ----
+  for (name in names(dat_split)) {
     
-    # Layers control for years
+    parts <- strsplit(name, "\\.")[[1]]
+    year <- parts[1]
+    
+    m <- add_safe_markers(m, dat_split[[name]], year)
+  }
+  
+  # ---- Final map elements ----
+  m %>%
     addLayersControl(
       overlayGroups = c(paste0(type, " 2024"), paste0(type, " 2025")),
       options = layersControlOptions(collapsed = FALSE)
     ) %>%
-    
-    # Legend
     addLegend(
       "bottomleft",
-      pal = if(type=="Fish") pal_fish else pal_edna,
+      pal = if(type == "Fish") pal_fish else pal_edna,
       values = names(result_cols),
-      title = paste(type, "Result"),
+      title = paste(type, " Result"),
       opacity = 1
-    ) |> 
+    ) %>%
     addControl(
       year_legend,
       position = "bottomleft"
@@ -325,10 +315,10 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
 
 make_leaf_tbl_both = function(dat){
   
-  dat |> 
+  dat_clean = dat %>% 
     dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
-                  Longitude = sf::st_coordinates(geom)[,1]) |> 
-    sf::st_drop_geometry() |> 
+                  Longitude = sf::st_coordinates(geom)[,1]) %>%
+    sf::st_drop_geometry() %>%
     dplyr::select(
                   `Year Sampled` = Year,
                   `Sampling Method` = sampling_method,
@@ -339,8 +329,15 @@ make_leaf_tbl_both = function(dat){
                   `Fish Species Sampled` = fish_species_sampled,
                   `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
                   `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc
-                  ) |> 
-    leafpop::popupTable()
+                  ) %>%
+    dplyr::mutate(
+      dplyr::across(everything(), ~ifelse(is.na(.), "", .))
+    )
+    
+  dat_clean <- dat_clean |> 
+    dplyr::select(where(~any(trimws(as.character(.)) != "")))
+    
+    leafpop::popupTable(dat_clean)
 }
 
 
@@ -350,29 +347,40 @@ make_all_years = function(dat, leaflet_id){
   dat_plot <- dat |>
     dplyr::mutate(
       icon_type = dplyr::case_when(
-        Year == 2025 & sampling_method == "Fish" &
-          fish_sampling_results_q_pcr_mc_detected == "Positive" ~ "pos_2025",
         
-        Year == 2025 & sampling_method == "eDNA" &
-          e_dna_results_mc == "Positive" ~ "pos_2025",
+        # 2025: ANY positive
+        Year == 2025 & (
+          fish_sampling_results_q_pcr_mc_detected == "Positive" |
+            e_dna_results_mc == "Positive"
+        ) ~ "pos_2025",
         
+        # 2025: sampled but not positive
         Year == 2025 & sampling_method %in% c("Fish", "eDNA") ~ "neg_2025",
         
-        Year == 2024 & sampling_method == "Fish" &
-          fish_sampling_results_q_pcr_mc_detected == "Positive" ~ "pos_2024",
+        # 2024: ANY positive
+        Year == 2024 & (
+          fish_sampling_results_q_pcr_mc_detected == "Positive" |
+            e_dna_results_mc == "Positive"
+        ) ~ "pos_2024",
         
-        Year == 2024 & sampling_method == "eDNA" &
-          e_dna_results_mc == "Positive" ~ "pos_2024",
-        
+        # 2024: sampled but not positive
         Year == 2024 & sampling_method %in% c("Fish", "eDNA") ~ "neg_2024",
         
         TRUE ~ NA_character_
       )
     )
-  
-  
+  dat_plot = dat_plot %>%
+    dplyr::group_by(date_collected, sample_site_name) %>%
+    dplyr::summarise(
+      dplyr::across(
+        everything(),
+        ~ paste(unique(na.omit(.)), collapse = " + ")
+      ),
+      .groups = "drop"
+    )
   type = "All"
   dat_tbl_all = make_leaf_tbl_both(dat_plot)
+  
   
   
   
@@ -413,6 +421,17 @@ make_all_years = function(dat, leaflet_id){
     #   group = paste0(type, " 2024"),
     #   options = pathOptions(pane = "points")
     # ) %>%
+    # Points for 2025
+    addMarkers(
+      data = dplyr::filter(dat_plot, Year == 2025),
+      lng = ~sf::st_coordinates(geom)[,1]+0.00005,
+      lat = ~sf::st_coordinates(geom)[,2]+0.00005,
+      icon = ~marker_icons[icon_type],
+      label = lapply(dat_tbl_all[dat_plot$Year == 2025], htmltools::HTML),
+      group = paste0(type, " 2025"),
+      options = pathOptions(pane = "points")
+    )|> 
+    
     addMarkers(
       data = dplyr::filter(dat_plot, Year == 2024),
       lng = ~sf::st_coordinates(geom)[,1],
@@ -422,16 +441,7 @@ make_all_years = function(dat, leaflet_id){
       group = paste0(type, " 2024"),
       options = pathOptions(pane = "points")
     ) |> 
-    # Points for 2025
-    addMarkers(
-      data = dplyr::filter(dat_plot, Year == 2025),
-      lng = ~sf::st_coordinates(geom)[,1],
-      lat = ~sf::st_coordinates(geom)[,2],
-      icon = ~marker_icons[icon_type],
-      label = lapply(dat_tbl_all[dat_plot$Year == 2025], htmltools::HTML),
-      group = paste0(type, " 2025"),
-      options = pathOptions(pane = "points")
-    )|> 
+    
     
     # Layers control for years
     addLayersControl(
@@ -465,7 +475,7 @@ output$leaf_edna <- renderLeaflet({
   make_leaflet(edna_data, type = "eDNA", leaflet_id = "leaf_edna")
 })
 
-
 output$leaf_all_data <- renderLeaflet({
   make_all_years(dat_all, leaflet_id = "leaf_all_data")
 })
+
