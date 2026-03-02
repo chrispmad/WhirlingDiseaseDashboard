@@ -59,27 +59,20 @@ ui <- secure_app(
     # ----------------------------
     tabsetPanel(
       id = "data_type",
-      
+      tabPanel("Fish", value = "fish",
+               leafletOutput("leaf_fish", height = "80vh")),
+      tabPanel("eDNA – M. cerebralis", value = "edna",
+               leafletOutput("leaf_edna", height = "80vh")),
       tabPanel(
-        title = "Fish",
-        value = "fish",
-        # Single leaflet for all Fish layers (2024 + 2025)
-        leafletOutput("leaf_fish", height = "80vh")
-      ),
-      
-      tabPanel(
-        title = "eDNA – M. cerebralis",
-        value = "edna",
-        # Single leaflet for all eDNA layers (2024 + 2025)
-        leafletOutput("leaf_edna", height = "80vh")
-      ),
-      tabPanel(
-        title = "Sampling Coverage - All Years",
-        value = "all_years",
-        # Single leaflet for all eDNA layers (2024 + 2025)
+        "Sampling Coverage - All Years", value = "all_years",
+        
+        div(
+          style = "font-size: 12px; color: #666; margin-bottom: 5px;",
+          "Note: 2025 sampling locations are slightly offset to improve visibility where they overlap with 2024."
+        ),
+        
         leafletOutput("leaf_all_data", height = "80vh")
       )
-      
     )
   )
 )
