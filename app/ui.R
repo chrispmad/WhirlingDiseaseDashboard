@@ -14,7 +14,7 @@ credentials <- data.frame(
 
 ui <- secure_app(
   fluidPage(
-    theme = bs_theme(bootswatch = "flatly", version = 5),
+    theme = "bcgov.css",
     
     titlePanel("Whirling Disease Results"),
     
@@ -60,9 +60,9 @@ ui <- secure_app(
     tabsetPanel(
       id = "data_type",
       tabPanel("Fish", value = "fish",
-               leafletOutput("leaf_fish", height = "80vh")),
+               leafletOutput("leaf_fish", height = "70vh")),
       tabPanel("eDNA – M. cerebralis", value = "edna",
-               leafletOutput("leaf_edna", height = "80vh")),
+               leafletOutput("leaf_edna", height = "70vh")),
       tabPanel(
         "Sampling Coverage - All Years", value = "all_years",
         
@@ -73,6 +73,20 @@ ui <- secure_app(
         
         leafletOutput("leaf_all_data", height = "80vh")
       )
-    )
+    ),
+    ## add this chunk for the footer =================================
+    column(width = 12,
+           style = "background-color:#003366; border-top:2px solid #fcba19;",
+           tags$footer(class="footer",
+                       tags$div(class="container", style="display:flex; justify-content:center; flex-direction:column; text-align:center; height:46px;",
+                                tags$ul(style="display:flex; flex-direction:row; flex-wrap:wrap; margin:0; list-style:none; align-items:center; height:100%;",
+                                        tags$li(a(href="https://www2.gov.bc.ca/gov/content/home", "Home", style="font-size:1em; font-weight:normal; color:white; padding-left:5px; padding-right:5px; border-right:1px solid #4b5e7e;")),
+                                        tags$li(a(href="https://www2.gov.bc.ca/gov/content/home/disclaimer", "Disclaimer", style="font-size:1em; font-weight:normal; color:white; padding-left:5px; padding-right:5px; border-right:1px solid #4b5e7e;")),
+                                        tags$li(a(href="https://www2.gov.bc.ca/gov/content/home/privacy", "Privacy", style="font-size:1em; font-weight:normal; color:white; padding-left:5px; padding-right:5px; border-right:1px solid #4b5e7e;")),
+                                        tags$li(a(href="https://www2.gov.bc.ca/gov/content/home/accessibility", "Accessibility", style="font-size:1em; font-weight:normal; color:white; padding-left:5px; padding-right:5px; border-right:1px solid #4b5e7e;")),
+                                        tags$li(a(href="https://www2.gov.bc.ca/gov/content/home/copyright", "Copyright", style="font-size:1em; font-weight:normal; color:white; padding-left:5px; padding-right:5px; border-right:1px solid #4b5e7e;")),
+                                        tags$li(a(href="https://www2.gov.bc.ca/StaticWebResources/static/gov3/html/contact-us.html", "Contact", style="font-size:1em; font-weight:normal; color:white; padding-left:5px; padding-right:5px; border-right:1px solid #4b5e7e;"))
+                                ) ) ) )
+    ## end of footer chunk =========================================
   )
 )
