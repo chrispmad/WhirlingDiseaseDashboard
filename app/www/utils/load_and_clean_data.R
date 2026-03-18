@@ -90,13 +90,17 @@ dat = dat |>
 #-----------------------------------------------------------------------------------------------------------
 
 
+# 
+# dat_2025 = dat_2025 |> dplyr::filter(stringr::str_detect(confirmed_to_have_been_sampled_in_2025_y_n, "^Y"))
+# 
 
-dat_2025 = dat_2025 |> dplyr::filter(stringr::str_detect(confirmed_to_have_been_sampled_in_2025_y_n, "^Y"))
 
 dat_2025 = dat_2025 |> 
   dplyr::rename(reach = sub_watershed_reach_name, sample_site_name = final_sample_site_name,
          delivery_agency = sampling_organization, sampled_in_2025_y_n = confirmed_to_have_been_sampled_in_2025_y_n,
-         e_dna_results_mc = result_mc, e_dna_results_tubifex = result_tubifex)
+         e_dna_results_mc = result_mc)
+
+dat_2025$e_dna_results_tubifex = NA
 
 # dat_2025 = dat_2025 |> 
 #   dplyr::mutate(e_dna_results_mc = dplyr::case_when(
