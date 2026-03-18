@@ -20,40 +20,34 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
         Latitude  = coords[, 2]
       )
     
-    
+   
     # Column selection differs by year
     if (year == "2025") {
+      
+      
+     
       results <- dat_year %>%
-        dplyr::group_by(sample_site_name) %>%
+        dplyr::mutate(
+          Latitude  = round(sf::st_coordinates(geom)[,2], 4),
+          Longitude = round(sf::st_coordinates(geom)[,1], 4)
+        ) %>%
+        dplyr::group_by(sample_site_name, batch_no) %>%
         dplyr::summarise(
+          `Waterbody Name` = dplyr::first(waterbody_name),
           `Sampling Method` = paste(sort(unique(sampling_method)), collapse = " + "),
-          waterbody_name = dplyr::first(waterbody_name),
-          fish_species_sampled = tidyr::replace_na(
-            dplyr::first(fish_species_sampled), "NA"
-          ),
-          `Delivery Agency` = dplyr::first(delivery_agency),
-          fish_sampling_results_q_pcr_mc_detected =
-            tidyr::replace_na(
-              dplyr::first(fish_sampling_results_q_pcr_mc_detected), "NA"
-            ),
-          e_dna_results_mc =
-            tidyr::replace_na(
-              dplyr::first(e_dna_results_mc), "NA"
-            ),
-          Latitude  = round(dplyr::first(Latitude), 4),
-          Longitude = round(dplyr::first(Longitude), 4),
-          `Date Collected` =
-            paste(sort(unique(date_collected)), collapse = ", "),
-          `Volume Sampled (l)` =
-            paste(sort(unique(volume_sampled)), collapse = ", "),
-          `Filter Size (µm)` =
-            paste(sort(unique(filter_size)), collapse = ", "),
+          `Fish Species Sampled` = paste(sort(unique(fish_species_sampled)), collapse = " + "),
+          `Fish Sampling Results` = paste(sort(unique(fish_sampling_results_q_pcr_mc_detected)), collapse = " + "),
+          `eDNA Sampling Results (M. cerebralis – parasite)` = paste(sort(unique(e_dna_results_mc)), collapse = " + "),
+          `Delivery Agency` = paste(sort(unique(delivery_agency)), collapse = " + "),
+          `Date Collected` = paste(sort(unique(date_collected)), collapse = ", "),
+          `Batch` = dplyr::first(batch_no),
+          `Volume Sampled (l)` = paste(total_volume_filtered_l, collapse = ", "),
+          `Filter Size (µm)` = paste(filter_size, collapse = ", "),
+          Latitude = dplyr::first(Latitude),
+          Longitude = dplyr::first(Longitude),
           .groups = "drop"
-        ) |>
-        sf::st_drop_geometry()
-      
-      
-      results <- results %>%
+        ) %>%
+        # separate volumes and filter sizes into their own columns
         tidyr::separate(
           `Volume Sampled (l)`,
           into = paste0("Volume Sampled (l) ", 1:3),
@@ -67,23 +61,25 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
           sep = ", ",
           fill = "right",
           extra = "drop"
-        )
+        ) %>%
+        dplyr::ungroup() %>%
+        sf::st_drop_geometry() %>%
+        dplyr::mutate(across(everything(), ~ifelse(is.na(.), "", .)))
       
       
       results <- results %>%
         dplyr::select(
-          `Waterbody Name` = waterbody_name,
+          `Waterbody Name`,
           `Sample Site` = sample_site_name,
           Latitude,
           Longitude,
           `Sampling Method`,
           `Delivery Agency`,
-          `Fish Species Sampled` = fish_species_sampled,
-          `Fish Sampling Results` =
-            fish_sampling_results_q_pcr_mc_detected,
-          `eDNA Sampling Results (M. cerebralis - parasite)` =
-            e_dna_results_mc,
+          `Fish Species Sampled`,
+          `Fish Sampling Results`,
+          `eDNA Sampling Results (M. cerebralis – parasite)`,
           `Date Collected`,
+          Batch,
           dplyr::starts_with("Volume Sampled (l)"),
           dplyr::starts_with("Filter Size (µm)")
         )
