@@ -359,20 +359,35 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
 
 make_leaf_tbl_both = function(dat){
   
+  
   dat_clean = dat %>% 
     dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
                   Longitude = sf::st_coordinates(geom)[,1]) %>%
-    sf::st_drop_geometry() %>%
+    sf::st_drop_geometry()
+  
+  # ---- Calculate Tot. Batches only for eDNA if batch_no exists ----
+  if ("batch_no" %in% names(dat_clean)) {
+    dat_clean <- dat_clean %>%
+      dplyr::group_by(sample_site_name) %>%
+      dplyr::mutate(`No. Sampling Events:` = max(batch_no, na.rm = TRUE)) %>%
+      dplyr::ungroup()
+  }
+  
+  
+  
+  dat_clean = dat_clean %>%
     dplyr::select(
       `Year Sampled` = Year,
       `Sampling Method` = sampling_method,
+      dplyr::any_of("No. Sampling Events:"),
       `Sample Site` = sample_site_name,
       Latitude,
       Longitude,,
       `Delivery Agency` = delivery_agency,
       `Fish Species Sampled` = fish_species_sampled,
       `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-      `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc
+      `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
+      `Date Collected` = date_collected
     ) %>%
     dplyr::mutate(
       dplyr::across(everything(), ~ifelse(is.na(.), "", .))
