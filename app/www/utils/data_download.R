@@ -163,13 +163,101 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
   openxlsx::saveWorkbook(wb, con, overwrite = TRUE)
 }
 
-output$data_dl_2024 <- downloadHandler(
-  filename = function() { "BC_WhirlingDisease_2024.xlsx" },
-  content = function(con) { create_wb_for_year("2024", con, dat) }
-)
 
-output$data_dl_2025 <- downloadHandler(
-  filename = function() { "BC_WhirlingDisease_2025.xlsx" },
-  content = function(con) { create_wb_for_year("2025", con, dat_2025) }
-)
 
+
+# output$data_dl_2024 <- downloadHandler(
+#   filename = function() { "BC_WhirlingDisease_2024.xlsx" },
+#   content = function(con) { create_wb_for_year("2024", con, dat) }
+# )
+# 
+# output$data_dl_2025 <- downloadHandler(
+#   filename = function() { "BC_WhirlingDisease_2025.xlsx" },
+#   content = function(con) { create_wb_for_year("2025", con, dat_2025) }
+# )
+
+pw_error <- reactiveVal(FALSE)
+
+
+observeEvent(input$data_dl_2024, {
+  pending_download("2024")
+  
+  showModal(modalDialog(
+    title = "Enter Password",
+    passwordInput("dl_password", "Password:", value = ""),
+    
+    if (pw_error()) {
+      div(style = "color:red;", "Incorrect password")
+    },
+    
+    footer = tagList(
+      modalButton("Cancel"),
+      actionButton("confirm_download", "Download", class = "btn btn-forest")
+    )
+  ))
+})
+
+observeEvent(input$data_dl_2025, {
+  pending_download("2025")
+  
+  showModal(modalDialog(
+    title = "Enter Password",
+    passwordInput("dl_password", "Password:", value = ""),
+    
+    if (pw_error()) {
+      div(style = "color:red;", "Incorrect password")
+    },
+    
+    footer = tagList(
+      modalButton("Cancel"),
+      actionButton("confirm_download", "Download", class = "btn btn-forest")
+    )
+  ))
+})
+
+observeEvent(input$confirm_download, {
+  if (input$dl_password == APP_PASSWORD) {
+    
+    pw_error(FALSE)  # reset error
+    removeModal()
+    
+    year <- pending_download()
+    tmp <- tempfile(fileext = ".xlsx")
+    
+    if (year == "2024") {
+      create_wb_for_year("2024", tmp, dat)
+      filename <- "2024_wd_data.xlsx"
+    } else {
+      create_wb_for_year("2025", tmp, dat_2025)
+      filename <- "2025_wd_data.xlsx"
+    }
+    
+    new_path <- file.path(dirname(tmp), filename)
+    file.rename(tmp, new_path)
+    
+    addResourcePath("tmpdownload", dirname(new_path))
+    runjs(sprintf(
+      "window.location.href = 'tmpdownload/%s';",
+      filename
+    ))
+    
+  } else {
+    
+    pw_error(TRUE)  # set error flag
+    
+    # re-show modal for same year
+    year <- pending_download()
+    
+    showModal(modalDialog(
+      title = "Enter Password",
+      passwordInput("dl_password", "Password:", value = ""),
+      
+      div(style = "color:red;", "Incorrect password"),
+      
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("confirm_download", "Download", class = "btn btn-forest")
+      )
+    ))
+  }
+})
