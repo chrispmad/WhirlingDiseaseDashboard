@@ -333,7 +333,7 @@ p1_facet <- ggplot() +
   facet_wrap(~ Year) +   # <-- split plots by Year
   theme_minimal() +
   theme(
-    legend.position = "right",
+    legend.position = "bottom",
     legend.title = element_text(face = "bold"),
     legend.text = element_text(size = 10),
     strip.text = element_text(face = "bold", size = 16)   # facet title size
