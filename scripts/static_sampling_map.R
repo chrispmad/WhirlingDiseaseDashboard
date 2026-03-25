@@ -238,11 +238,14 @@ dat_all <- dat_all |>
     )
   )
 
+dat_all <- dat_all |> 
+  mutate(result = factor(result, levels = c("Negative", "Positive")))
+
 p1 = ggplot() +
   tidyterra::geom_spatraster_rgb(data = bc_stations_basemap_white) +
   geom_sf(data = col, color = "darkgreen", fill = NA)+
   geom_sf(
-    data = dat_all,
+    data = dat_all |> arrange(result),  # draws Negative first, Positive last
     aes(
       shape = as.factor(Year),
       color = result
@@ -268,4 +271,75 @@ p1 = ggplot() +
     legend.text = element_text(size = 10)
   )
 
-ggsave("./images/sampling_locations.png", width = 8, height = 6, dpi = 500)  
+ggsave("./images/sampling_locations.png",p1, width = 12, height = 10, dpi = 500)  
+
+
+p2 = ggplot() +
+  tidyterra::geom_spatraster_rgb(data = bc_stations_basemap_white) +
+  geom_sf(data = col, color = "darkgreen", fill = NA)+
+  geom_sf(
+    data = dat_all |> filter(result == "Positive"),  # draws Negative first, Positive last
+    aes(
+      shape = as.factor(Year),
+      color = result
+    ),
+    size = 5
+  ) +
+  scale_shape_manual(
+    name = "Sampling Year",          # better legend title
+    values = c(16, 17)
+  ) +
+  scale_color_manual(
+    name = "Detection Result",       # better legend title
+    values = c("Positive" = "orange", "Negative" = "blue")
+  ) +
+  guides(
+    shape = guide_legend(order = 1), # control order in combined legend
+    color = guide_legend(order = 2)
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10)
+  )
+
+ggsave("./images/sampling_locations_positive.png",p2, width = 12, height = 10, dpi = 500)  
+
+
+p1_facet <- ggplot() +
+  tidyterra::geom_spatraster_rgb(data = bc_stations_basemap_white) +
+  geom_sf(data = col, color = "darkgreen", fill = NA)+
+  geom_sf(
+    data = dat_all |> arrange(result),  # draws Negative first, Positive last
+    aes(
+      shape = as.factor(Year),
+      color = result
+    ),
+    size = 5
+  ) +
+  scale_shape_manual(
+    name = "Sampling Year",          
+    values = c(16, 17)
+  ) +
+  scale_color_manual(
+    name = "Detection Result",       
+    values = c("Positive" = "orange", "Negative" = "blue")
+  ) +
+  guides(
+    shape = guide_legend(order = 1),
+    color = guide_legend(order = 2)
+  ) +
+  facet_wrap(~ Year) +   # <-- split plots by Year
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10),
+    strip.text = element_text(face = "bold", size = 16)   # facet title size
+  )
+
+# Save the faceted plot
+ggsave("./images/sampling_locations_facet.png", plot = p1_facet, width = 12, height = 10, dpi = 500)
+
+
