@@ -1,10 +1,10 @@
 # dat = sf::read_sf("app/www/sampling_results.gpkg")
 # col = sf::read_sf("app/www/columbia_watershed.gpkg")
 # subw = sf::read_sf("app/www/subwatershed_groups.gpkg")
-dat = sf::read_sf("app/www/sampling_results.gpkg")
-col = sf::read_sf("app/www/columbia_watershed.gpkg")
-subw = sf::read_sf("app/www/subwatershed_groups.gpkg")
-dat_2025 = sf::read_sf("app/www/sampling_results_2025.gpkg")
+dat = sf::read_sf("www/sampling_results.gpkg")
+col = sf::read_sf("www/columbia_watershed.gpkg")
+subw = sf::read_sf("www/subwatershed_groups.gpkg")
+dat_2025 = sf::read_sf("www/sampling_results_2025.gpkg")
 
 # Remove sites that weren't sampled.
 dat = dat |> dplyr::filter(stringr::str_detect(sampled_in_2024_y_n, "^Y"))
