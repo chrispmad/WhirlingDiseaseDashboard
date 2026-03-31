@@ -343,3 +343,51 @@ p1_facet <- ggplot() +
 ggsave("./images/sampling_locations_facet.png", plot = p1_facet, width = 12, height = 10, dpi = 500)
 
 
+bc <- bcmaps::bc_bound()
+
+bc_bbox <- st_bbox(bc)
+
+target_crs <- st_crs(3005)
+
+bc_t  <- st_transform(bc, target_crs)
+col_t <- st_transform(col, target_crs)
+
+# Re-fetch basemap using the transformed bbox
+bc_bbox <- st_bbox(bc_t)
+bc_stations_basemap_white <- basemap_terra(
+  ext = bc_bbox,
+  map_service = 'carto',
+  map_type = 'light_no_labels'
+)
+
+
+p_final <- ggplot() +
+  tidyterra::geom_spatraster_rgb(data = bc_stations_basemap_white) +
+  geom_sf(data = bc_t,  fill = NA, color = "grey30", linewidth = 0.4) +
+  geom_sf(data = col_t, fill = "#a8c8a0", color = "#2d6a4f",       # muted greens
+          linewidth = 0.5, alpha = 0.7) +
+  theme_map()
+
+
+library(ggspatial)
+
+final_plot =p_final +
+  annotation_scale(
+    location = "bl",           # bottom-right
+    width_hint = 0.2,
+    pad_x = unit(1.6, "cm"),
+    pad_y = unit(1.4, "cm")
+  ) +
+  annotation_north_arrow(
+    location = "bl",           # bottom-right
+    which_north = "true",
+    height = unit(2, "cm"),
+    width = unit(2, "cm"),
+    pad_x = unit(1.8, "cm"),
+    pad_y = unit(2, "cm"),   # higher value pushes it further up
+    style = north_arrow_fancy_orienteering(
+      fill = c("grey40", "white")
+    )
+  )
+
+ggsave("./images/columbia_fraser.png", plot = final_plot, width = 12, height = 10, dpi = 500)
