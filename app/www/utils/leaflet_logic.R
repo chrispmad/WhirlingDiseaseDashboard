@@ -312,6 +312,34 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
       fill = "transparent",
       options = pathOptions(clickable = FALSE, pane = "boundaries")
     ) %>%
+    addMapPane("emerald_lake_location", zIndex = 450) %>%
+    addPolygons(
+      data = emerald_ws,
+      color = "yellow",
+      weight = 1.5,
+      opacity = 0.6,
+      fill = "transparent",
+      
+      # ---- Hover text ----
+      label = ~WATERSHE_1,
+      labelOptions = labelOptions(
+        direction = "auto",
+        textsize = "13px"
+      ),
+      
+      # ---- Click popup ----
+      popup = ~htmltools::HTML(
+        paste0(
+          "<strong>Watershed:</strong> ", WATERSHE_1, "<br/>",
+          "<strong>Waterbody:</strong> Emerald Lake"
+        )
+      ),
+      
+      options = pathOptions(
+        clickable = TRUE,
+        pane = "emerald_lake_location"
+      )
+    ) %>%
     addMapPane("points", zIndex = 500)
   
   # ---- Helper to safely add markers ----
@@ -351,9 +379,17 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
       title = paste(type, " Result"),
       opacity = 1
     ) %>%
+    
     addControl(
       year_legend,
       position = "bottomleft"
+    ) |> 
+    addLegend(
+      position = "bottomleft",
+      colors = "yellow",
+      labels = "First WD Detection",
+      title = "Emerald Lake Watershed",
+      opacity = 0.6
     )
 }
 
@@ -465,6 +501,34 @@ make_all_years = function(dat, leaflet_id){
       fill = "transparent",
       options = pathOptions(clickable = FALSE, pane = "boundaries")
     ) %>%
+    addMapPane("emerald_lake_location", zIndex = 450) %>%
+    addPolygons(
+      data = emerald_ws,
+      color = "yellow",
+      weight = 1.5,
+      opacity = 0.6,
+      fill = "transparent",
+      
+      # ---- Hover text ----
+      label = ~WATERSHE_1,
+      labelOptions = labelOptions(
+        direction = "auto",
+        textsize = "13px"
+      ),
+      
+      # ---- Click popup ----
+      popup = ~htmltools::HTML(
+        paste0(
+          "<strong>Watershed:</strong> ", WATERSHE_1, "<br/>",
+          "<strong>Waterbody:</strong> Emerald Lake"
+        )
+      ),
+      
+      options = pathOptions(
+        clickable = TRUE,
+        pane = "emerald_lake_location"
+      )
+    ) %>%
     # Points for 2024
     addMapPane("points", zIndex = 500) %>%
     # addCircleMarkers(
@@ -516,9 +580,17 @@ make_all_years = function(dat, leaflet_id){
       title = paste(type, "Result"),
       opacity = 1
     ) |> 
+    
     addControl(
       year_legend,
       position = "bottomleft"
+    ) |> 
+    addLegend(
+      position = "bottomleft",
+      colors = "yellow",
+      labels = "First WD Detection",
+      title = "Emerald Lake Watershed",
+      opacity = 0.6
     )
   
 }
