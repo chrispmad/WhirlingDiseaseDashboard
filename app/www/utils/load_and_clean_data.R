@@ -5,6 +5,8 @@ dat = sf::read_sf("www/sampling_results.gpkg")
 col = sf::read_sf("www/columbia_watershed.gpkg")
 subw = sf::read_sf("www/subwatershed_groups.gpkg")
 dat_2025 = sf::read_sf("www/sampling_results_2025.gpkg")
+# get the watershed with Emerald Lake in it
+emerald_ws = sf::read_sf("www/emerald_lake_loc.gpkg") |> sf::st_transform(4326)
 
 # Remove sites that weren't sampled.
 dat = dat |> dplyr::filter(stringr::str_detect(sampled_in_2024_y_n, "^Y"))
@@ -86,6 +88,17 @@ dat = dat |>
     )
   )
 
+dat <- dat |>
+  dplyr::mutate(
+    date_collected = lubridate::parse_date_time(
+      date_collected,
+      orders = c("Ymd", "mdY", "dmy", "Y/m/d", "m/d/Y", "d/m/Y", "Ymd HMS"),
+      quiet = TRUE
+    ) |>
+      as.Date() |>
+      as.character()
+  )
+
 
 #-----------------------------------------------------------------------------------------------------------
 
@@ -164,6 +177,19 @@ dat_2025 = dat_2025 |>
     )
   )
 
+dat_2025 <- dat_2025 |>
+  dplyr::mutate(
+    date_collected = lubridate::parse_date_time(
+      date_collected,
+      orders = c("Ymd", "mdY", "dmy", "Y/m/d", "m/d/Y", "d/m/Y", "Ymd HMS"),
+      quiet = TRUE
+    ) |>
+      as.Date() |>
+      as.character()
+  ) |> 
+  dplyr::mutate(e_dna_results_tubifex = NA)
+
+
 #------------
 # New request - no more tubifex
 
@@ -176,8 +202,18 @@ dat_2025 = dat_2025 |>
   dplyr::mutate(Year = 2025)
 
 
-dat = dat |> 
-  dplyr::mutate(date_collected = as.character(date_collected))
+dat <- dat |>
+  dplyr::mutate(
+    date_collected = lubridate::parse_date_time(
+      date_collected,
+      orders = c("Ymd", "mdY", "dmy", "Y/m/d", "m/d/Y", "d/m/Y", "Ymd HMS"),
+      quiet = TRUE
+    ) |>
+      as.Date() |>
+      as.character()
+  )
+
+
 #---- combine the data ------#
 dat_all = dplyr::bind_rows(dat,dat_2025) 
 
@@ -204,12 +240,71 @@ fish_data <- dat_all |> dplyr::filter(sampling_method == "Fish")
 edna_data <- dat_all |> dplyr::filter(sampling_method == "eDNA")
 
 dat_excel <- dat_all %>%
-    mutate(
-      lon = st_coordinates(.)[, 1],
-      lat = st_coordinates(.)[, 2]
+  dplyr::mutate(
+      lon = sf::st_coordinates(.)[, 1],
+      lat = sf::st_coordinates(.)[, 2]
       
     ) |> 
-    st_drop_geometry()
+    sf::st_drop_geometry()
 
-write.csv(dat_excel, "./output/sampling_points.csv")
+#write.csv(dat_excel, "./output/sampling_points.csv")
+
+dat_excel_public = dat_excel |>  
+  dplyr::select(sample_site_name, sampling_method, region, fish_species_sampled,
+         date_collected, fish_sampling_results_q_pcr_mc_detected, e_dna_results_mc,
+         waterbody_name, lon, lat)
+
+dat_excel_public <- dat_excel_public |>
+  dplyr::mutate(dplyr::across(dplyr::everything(), \(x) {
+    x <- as.character(x)
+    replace(x, is.na(x), "NA")
+  }))
+
+# dat_excel_public = dat_excel_public |> 
+  
+
+#write.csv(dat_excel_public, "./output/sampling_points_public.csv")
+
+spp<-tibble::tibble(
+  acronym = c("BT", "EBT", "KOK", "MW", "RBT", "SK", "WCT"),
+  species = c(
+    "Bull Trout",
+    "Eastern Brook Trout",
+    "Kokanee",
+    "Mountain Whitefish",
+    "Rainbow Trout",
+    "Sockeye Salmon",
+    "Westslope Cutthroat Trout"
+  )
+)
+spp_lookup <- setNames(spp$species, spp$acronym)
+
+
+dat_excel_public <- dat_excel_public |>
+  dplyr::mutate(
+    fish_species_sampled_new = purrr::map_chr(
+      fish_species_sampled,
+      \(x) {
+        if (is.na(x) | x == "NA") return(x)
+        
+        parts <- stringr::str_split(x, "/\\s*")[[1]]
+        parts <- spp_lookup[parts]
+        paste(parts, collapse = ", ")
+      }
+    )
+  )
+
+
+df_max_chars <- dat_excel_public %>%
+  dplyr::mutate(dplyr::across(dplyr::everything(), ~ nchar(as.character(.)))) %>%
+  dplyr::summarise(dplyr::across(dplyr::everything(), \(x) max(x, na.rm = TRUE)))
+
+df_has_NA_string <- dat_excel_public %>%
+  dplyr::summarise(
+    dplyr::across(
+      dplyr::everything(),
+      \(x) any(as.character(x) == "NA", na.rm = TRUE)
+    )
+  )
+
 
