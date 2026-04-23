@@ -28,14 +28,14 @@ dat = read_excel('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSE
 
 dat = purrr::set_names(dat, snakecase::to_snake_case)
 
-dat <- dat |>
-  dplyr::mutate(date_collected = as.numeric(date_collected)) |> 
-  dplyr::mutate(
-    date_collected = dplyr::case_when(
-      is.numeric(date_collected) ~ as.Date(date_collected, origin = "1899-12-30"),
-      TRUE ~ as.Date(date_collected)
-    )
-  )
+# dat <- dat |>
+#   dplyr::mutate(date_collected = as.numeric(date_collected)) |> 
+#   dplyr::mutate(
+#     date_collected = dplyr::case_when(
+#       is.numeric(date_collected) ~ as.Date(date_collected, origin = "1899-12-30"),
+#       TRUE ~ as.Date(date_collected)
+#     )
+#   )
 
 dat = dat |> filter(!is.na(lat) & !is.na(long))
 
