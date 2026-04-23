@@ -1,12 +1,4 @@
-/*.red-square {
-  background: #ff000080;
-  position: absolute;
-}
-
-.blue-square {
-  background: #3232af80;
-  position: absolute;
-}*/
+/* Allow the navbar to grow to fit the logo */
 
 .leaflet-container {
   width: 100% !important;
