@@ -11,17 +11,14 @@ APP_PASSWORD <- creds$password
 ui <- navbarPage(
   id = "data_type",
   
-  title = tags$a(
-    href = "https://www2.gov.bc.ca",
-    tags$img(src = "images/gov3_bc_logo.png", height = "50px")
-  ),
+  title = tags$a(" "),
   
   header = tagList(
     tags$head(
       tags$link(
         rel = "stylesheet",
         type = "text/css",
-        href = "css/bcgov.css?v=2"
+        href = "css/bcgov.css?v=5"
       )
     ),
     useShinyjs(),
