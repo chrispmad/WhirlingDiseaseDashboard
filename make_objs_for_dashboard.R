@@ -74,6 +74,16 @@ sf::write_sf(subw,'app/www/subwatershed_groups.gpkg')
 
 # -------------------------------
 
+
+
+kicking_horse =  subw |> 
+  filter(str_detect(WATERSHED_GROUP_NAME, regex("kicking horse", ignore_case = TRUE)))
+if(file.exists('app/www/emerald_lake_loc.gpkg')) file.remove('app/www/emerald_lake_loc.gpkg')
+sf::write_sf(kicking_horse, "app/www/emerald_lake_loc.gpkg")
+
+
+
+
 ## get the 2025 data 
 
 # dat_2025_edna = read_excel("data/Whirling_Disease_2025_Sample_Tracking Final.xlsx", sheet = "eDNA with Dates")
@@ -307,3 +317,4 @@ dat_2025 = dat_2025 |>
 
 if(file.exists('app/www/sampling_results_2025.gpkg')) file.remove('app/www/sampling_results_2025.gpkg')
 sf::write_sf(dat_2025, 'app/www/sampling_results_2025.gpkg')
+
