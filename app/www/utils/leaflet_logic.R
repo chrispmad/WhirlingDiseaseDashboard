@@ -291,7 +291,7 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
     "2024" = make_leaf_tbl(dat %>% dplyr::filter(Year == 2024), type = type),
     "2025" = make_leaf_tbl(dat %>% dplyr::filter(Year == 2025), type = type)
   )
-  
+ 
   # ---- Base map ----
   m <- leaflet(dat) %>%
     addTiles() %>%
@@ -321,7 +321,7 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
       fill = "transparent",
       
       # ---- Hover text ----
-      label = ~WATERSHE_1,
+      label = ~WATERSHED_GROUP_NAME,
       labelOptions = labelOptions(
         direction = "auto",
         textsize = "13px"
@@ -330,7 +330,7 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
       # ---- Click popup ----
       popup = ~htmltools::HTML(
         paste0(
-          "<strong>Watershed:</strong> ", WATERSHE_1, "<br/>",
+          "<strong>Watershed:</strong> ", WATERSHED_GROUP_NAME, "<br/>",
           "<strong>Waterbody:</strong> Emerald Lake"
         )
       ),
