@@ -1,0 +1,203 @@
+library(tidyverse)
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(basemaps)
+library(ggspatial)
+library(ggmap)
+library(tibble)
+
+dat = sf::read_sf("app/www/sampling_results.gpkg")
+col = sf::read_sf("app/www/columbia_watershed.gpkg")
+subw = sf::read_sf("app/www/subwatershed_groups.gpkg")
+dat_2025 = sf::read_sf("app/www/sampling_results_2025.gpkg")
+
+# Remove sites that weren't sampled.
+dat = dat |> dplyr::filter(stringr::str_detect(sampled_in_2024_y_n, "^Y"))
+
+dat = dat |> 
+  dplyr::mutate(e_dna_results_mc = dplyr::case_when(
+    e_dna_results_mc == "Not Detected" ~ "Negative",
+    !is.na(e_dna_results_mc) ~ "Positive",
+    T ~ NA
+  )) |> 
+  dplyr::mutate(e_dna_results_tubifex = dplyr::case_when(
+    e_dna_results_tubifex == "Not Detected" ~ "Negative",
+    !is.na(e_dna_results_tubifex) ~ "Positive",
+    T ~ NA
+  ))
+
+
+dat_no_results = dat |> 
+  dplyr::filter((is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) |> 
+  dplyr::mutate(e_dna_results_mc = "NA",
+                e_dna_results_tubifex = "NA",
+                fish_sampling_results_q_pcr_mc_detected = "NA")
+
+dat = dat |> 
+  dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) #|> 
+# dplyr::bind_rows(dat_no_results)
+
+rm(dat_no_results)
+
+# Temporary correction to highlight NAs in dataset:
+dat = dat |> dplyr::mutate(sampling_method = tidyr::replace_na(sampling_method, "NA"))
+
+# Relabel the geometry column.
+dat = sf::st_set_geometry(dat, "geom")
+
+# Assign a colour based on sampling type, and also a colour based on test result.
+dat = dat |> 
+  dplyr::mutate(sample_type_colour = dplyr::case_when(
+    sampling_method == "eDNA" ~ 'gold',
+    sampling_method == "Fish" ~ 'salmon',
+    # sampling_method == "Fish + eDNA" ~ 'gold',
+    T ~ 'black'
+  )) |> 
+  dplyr::mutate(fish_results_colour = dplyr::case_when(
+    fish_sampling_results_q_pcr_mc_detected == "Negative" ~ 'lightgreen',
+    fish_sampling_results_q_pcr_mc_detected == "Positive" ~ 'purple',
+    fish_sampling_results_q_pcr_mc_detected == "Pending" ~ 'pink',
+    T ~ 'black'
+  )) |> 
+  dplyr::mutate(e_dna_myx_colour = ifelse(e_dna_results_mc == 'Positive', '#F97912', '#612073')) |> 
+  dplyr::mutate(e_dna_tubifex_colour = ifelse(e_dna_results_tubifex == "Positive", "#F97912", "#612073"))
+
+dat = dat |> 
+  dplyr::mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
+
+dat = dat |> 
+  dplyr::mutate(
+    delivery_agency = dplyr::case_when(
+      delivery_agency == "ONA (Eleanor)" ~ "ONA",
+      delivery_agency == "ONA (Sam)" ~ "ONA",
+      delivery_agency == "WLRS - AEB fisheries" ~ "WLRS",
+      delivery_agency == "WLRS (COS AIS inspectors)" ~ "WLRS",
+      delivery_agency == "WLRS - region 3" ~ "WLRS",
+      delivery_agency == "WLRS (headquarters)" ~ "WLRS",
+      delivery_agency == "WLRS - Kootenay region" ~ "WLRS",
+      delivery_agency == "WLRS Cultus" ~ "WLRS",
+      delivery_agency == "WLRS Region 2" ~ "WLRS",
+      TRUE ~ delivery_agency
+    )
+  )
+
+
+#-----------------------------------------------------------------------------------------------------------
+
+
+# 
+# dat_2025 = dat_2025 |> dplyr::filter(stringr::str_detect(confirmed_to_have_been_sampled_in_2025_y_n, "^Y"))
+# 
+
+
+dat_2025 = dat_2025 |> 
+  dplyr::rename(reach = sub_watershed_reach_name, sample_site_name = final_sample_site_name,
+                delivery_agency = sampling_organization, sampled_in_2025_y_n = confirmed_to_have_been_sampled_in_2025_y_n,
+                e_dna_results_mc = result_mc)
+
+dat_2025$e_dna_results_tubifex = NA
+
+# dat_2025 = dat_2025 |> 
+#   dplyr::mutate(e_dna_results_mc = dplyr::case_when(
+#     e_dna_results_mc == "Not Detected" ~ "Negative",
+#     !is.na(e_dna_results_mc) ~ "Positive",
+#     T ~ NA
+#   )) |> 
+#   dplyr::mutate(e_dna_results_tubifex = dplyr::case_when(
+#     e_dna_results_tubifex == "Not Detected" ~ "Negative",
+#     !is.na(e_dna_results_tubifex) ~ "Positive",
+#     T ~ NA
+#   ))
+
+dat_no_results_2025 = dat_2025 |> 
+  dplyr::filter((is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) |> 
+  dplyr::mutate(e_dna_results_mc = "NA",
+                e_dna_results_tubifex = "NA",
+                fish_sampling_results_q_pcr_mc_detected = "NA")
+
+# dat_2025 = dat_2025 |>
+#   dplyr::filter(!(is.na(e_dna_results_mc) & is.na(e_dna_results_tubifex) & is.na(fish_sampling_results_q_pcr_mc_detected))) #|>
+# dplyr::bind_rows(dat_no_results)
+
+## Placeholder as this is not in the results
+dat_2025 = dat_2025 |> 
+  dplyr::rename(fish_species_sampled = fish_species)
+
+
+dat_2025 = dat_2025 |> 
+  dplyr::mutate(sample_type_colour = dplyr::case_when(
+    sampling_method == "eDNA" ~ 'gold',
+    sampling_method == "Fish" ~ 'salmon',
+    # sampling_method == "Fish + eDNA" ~ 'gold',
+    T ~ 'black'
+  )) |> 
+  dplyr::mutate(fish_results_colour = dplyr::case_when(
+    fish_sampling_results_q_pcr_mc_detected == "Negative" ~ 'lightgreen',
+    fish_sampling_results_q_pcr_mc_detected == "Positive" ~ 'purple',
+    fish_sampling_results_q_pcr_mc_detected == "Pending" ~ 'pink',
+    T ~ 'black'
+  )) |> 
+  dplyr::mutate(e_dna_myx_colour = ifelse(e_dna_results_mc == 'Positive', '#F97912', '#612073')) |> 
+  dplyr::mutate(e_dna_tubifex_colour = ifelse(e_dna_results_tubifex == "Positive", "#F97912", "#612073"))
+
+dat_2025 = dat_2025 |> 
+  dplyr::mutate(e_dna_results_tubifex = ifelse(e_dna_results_tubifex == "Positive", "Present", "Absent"))
+
+dat_2025 = dat_2025 |> 
+  dplyr::mutate(
+    delivery_agency = dplyr::case_when(
+      delivery_agency == "ONA (Eleanor)" ~ "ONA",
+      delivery_agency == "ONA (Sam)" ~ "ONA",
+      delivery_agency == "WLRS - AEB fisheries" ~ "WLRS",
+      delivery_agency == "WLRS (COS AIS inspectors)" ~ "WLRS",
+      delivery_agency == "WLRS - region 3" ~ "WLRS",
+      delivery_agency == "WLRS (headquarters)" ~ "WLRS",
+      delivery_agency == "WLRS - Kootenay region" ~ "WLRS",
+      delivery_agency == "WLRS Cultus" ~ "WLRS",
+      delivery_agency == "WLRS Region 2" ~ "WLRS",
+      TRUE ~ delivery_agency
+    )
+  )
+
+#------------
+# New request - no more tubifex
+
+dat = dat |> 
+  dplyr::select(-e_dna_results_tubifex) |> 
+  dplyr::mutate(Year = 2024)
+
+dat_2025 = dat_2025 |> 
+  dplyr::select(-e_dna_results_tubifex) |> 
+  dplyr::mutate(Year = 2025)
+
+
+dat = dat |> 
+  dplyr::mutate(date_collected = as.character(date_collected))
+#---- combine the data ------#
+dat_all = dplyr::bind_rows(dat,dat_2025) 
+
+dat_all = dat_all |> 
+  dplyr::select(-c(original_lat,original_long))
+
+dat_all = dat_all |> 
+  dplyr::mutate(
+    delivery_agency = dplyr::case_when(
+      delivery_agency == "ONA (Eleanor)" ~ "ONA",
+      delivery_agency == "ONA (Sam)" ~ "ONA",
+      delivery_agency == "WLRS - AEB fisheries" ~ "WLRS",
+      delivery_agency == "WLRS (COS AIS inspectors)" ~ "WLRS",
+      delivery_agency == "WLRS - region 3" ~ "WLRS",
+      delivery_agency == "WLRS (headquarters)" ~ "WLRS",
+      delivery_agency == "WLRS - Kootenay region" ~ "WLRS",
+      delivery_agency == "WLRS Cultus" ~ "WLRS",
+      delivery_agency == "WLRS Region 2" ~ "WLRS",
+      TRUE ~ delivery_agency
+    )
+  )
+
+fish_data <- dat_all |> dplyr::filter(sampling_method == "Fish")
+edna_data <- dat_all |> dplyr::filter(sampling_method == "eDNA")
+
+
+unique(dat_2025$delivery_agency)
