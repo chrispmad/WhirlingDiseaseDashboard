@@ -109,6 +109,7 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
         dplyr::select(
           
           `Sample Site` = sample_site_name,
+          `Date Collected`,
           Latitude,
           Longitude,
           `Sampling Method`,
@@ -116,7 +117,6 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
           `Fish Species Sampled` = fish_species_sampled,
           `Fish Sampling Results` =
             fish_sampling_results_q_pcr_mc_detected,
-          `Date Collected`,
           `eDNA Sampling Results (M. cerebralis - parasite)` =
             e_dna_results_mc
         )
