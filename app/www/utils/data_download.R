@@ -20,75 +20,71 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
         Latitude  = coords[, 2]
       )
     
-    
+   
     # Column selection differs by year
-    if (year == "2025") {
-      results <- dat_year %>%
-        dplyr::group_by(sample_site_name) %>%
-        dplyr::summarise(
-          `Sampling Method` = paste(sort(unique(sampling_method)), collapse = " + "),
-          waterbody_name = dplyr::first(waterbody_name),
-          fish_species_sampled = tidyr::replace_na(
-            dplyr::first(fish_species_sampled), "NA"
-          ),
-          `Delivery Agency` = dplyr::first(delivery_agency),
-          fish_sampling_results_q_pcr_mc_detected =
-            tidyr::replace_na(
-              dplyr::first(fish_sampling_results_q_pcr_mc_detected), "NA"
-            ),
-          e_dna_results_mc =
-            tidyr::replace_na(
-              dplyr::first(e_dna_results_mc), "NA"
-            ),
-          Latitude  = round(dplyr::first(Latitude), 4),
-          Longitude = round(dplyr::first(Longitude), 4),
-          `Date Collected` =
-            paste(sort(unique(date_collected)), collapse = ", "),
-          `Volume Sampled (l)` =
-            paste(sort(unique(volume_sampled)), collapse = ", "),
-          `Filter Size (µm)` =
-            paste(sort(unique(filter_size)), collapse = ", "),
-          .groups = "drop"
-        ) |>
-        sf::st_drop_geometry()
-      
-      
-      results <- results %>%
-        tidyr::separate(
-          `Volume Sampled (l)`,
-          into = paste0("Volume Sampled (l) ", 1:3),
-          sep = ", ",
-          fill = "right",
-          extra = "drop"
-        ) %>%
-        tidyr::separate(
-          `Filter Size (µm)`,
-          into = paste0("Filter Size (µm) ", 1:3),
-          sep = ", ",
-          fill = "right",
-          extra = "drop"
-        )
-      
-      
-      results <- results %>%
-        dplyr::select(
-          `Waterbody Name` = waterbody_name,
-          `Sample Site` = sample_site_name,
-          Latitude,
-          Longitude,
-          `Sampling Method`,
-          `Delivery Agency`,
-          `Fish Species Sampled` = fish_species_sampled,
-          `Fish Sampling Results` =
-            fish_sampling_results_q_pcr_mc_detected,
-          `eDNA Sampling Results (M. cerebralis - parasite)` =
-            e_dna_results_mc,
-          `Date Collected`,
-          dplyr::starts_with("Volume Sampled (l)"),
-          dplyr::starts_with("Filter Size (µm)")
-        )
-      
-    } else {
+    # if (year == "2025") {
+    #   
+    #   
+    #  
+    #   results <- dat_year %>%
+    #     dplyr::mutate(
+    #       Latitude  = round(sf::st_coordinates(geom)[,2], 4),
+    #       Longitude = round(sf::st_coordinates(geom)[,1], 4)
+    #     ) %>%
+    #     dplyr::group_by(sample_site_name, batch_no) %>%
+    #     dplyr::summarise(
+    #       `Waterbody Name` = dplyr::first(waterbody_name),
+    #       `Sampling Method` = paste(sort(unique(sampling_method)), collapse = " + "),
+    #       `Fish Species Sampled` = paste(sort(unique(fish_species_sampled)), collapse = " + "),
+    #       `Fish Sampling Results` = paste(sort(unique(fish_sampling_results_q_pcr_mc_detected)), collapse = " + "),
+    #       `eDNA Sampling Results (M. cerebralis – parasite)` = paste(sort(unique(e_dna_results_mc)), collapse = " + "),
+    #       `Delivery Agency` = paste(sort(unique(delivery_agency)), collapse = " + "),
+    #       `Date Collected` = paste(sort(unique(date_collected)), collapse = ", "),
+    #       `Batch` = dplyr::first(batch_no),
+    #       `Volume Sampled (l)` = paste(total_volume_filtered_l, collapse = ", "),
+    #       `Filter Size (µm)` = paste(filter_size, collapse = ", "),
+    #       Latitude = dplyr::first(Latitude),
+    #       Longitude = dplyr::first(Longitude),
+    #       .groups = "drop"
+    #     ) %>%
+    #     # separate volumes and filter sizes into their own columns
+    #     tidyr::separate(
+    #       `Volume Sampled (l)`,
+    #       into = paste0("Volume Sampled (l) ", 1:3),
+    #       sep = ", ",
+    #       fill = "right",
+    #       extra = "drop"
+    #     ) %>%
+    #     tidyr::separate(
+    #       `Filter Size (µm)`,
+    #       into = paste0("Filter Size (µm) ", 1:3),
+    #       sep = ", ",
+    #       fill = "right",
+    #       extra = "drop"
+    #     ) %>%
+    #     dplyr::ungroup() %>%
+    #     sf::st_drop_geometry() %>%
+    #     dplyr::mutate(across(everything(), ~ifelse(is.na(.), "", .)))
+    #   
+    #   
+    #   results <- results %>%
+    #     dplyr::select(
+    #       `Waterbody Name`,
+    #       `Sample Site` = sample_site_name,
+    #       Latitude,
+    #       Longitude,
+    #       `Sampling Method`,
+    #       `Delivery Agency`,
+    #       `Fish Species Sampled`,
+    #       `Fish Sampling Results`,
+    #       `eDNA Sampling Results (M. cerebralis – parasite)`,
+    #       `Date Collected`,
+    #       Batch,
+    #       dplyr::starts_with("Volume Sampled (l)"),
+    #       dplyr::starts_with("Filter Size (µm)")
+    #     )
+    #   
+    # } else {
       
       results <- dat_year %>%
         dplyr::group_by(sample_site_name) %>%
@@ -113,6 +109,7 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
         dplyr::select(
           
           `Sample Site` = sample_site_name,
+          `Date Collected`,
           Latitude,
           Longitude,
           `Sampling Method`,
@@ -120,11 +117,10 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
           `Fish Species Sampled` = fish_species_sampled,
           `Fish Sampling Results` =
             fish_sampling_results_q_pcr_mc_detected,
-          `Date Collected`,
           `eDNA Sampling Results (M. cerebralis - parasite)` =
             e_dna_results_mc
         )
-    }
+    #}
     
     results <- results %>%
       dplyr::arrange(`Sample Site`)
@@ -167,13 +163,101 @@ create_wb_for_year <- function(year_val, con, dat_dl) {
   openxlsx::saveWorkbook(wb, con, overwrite = TRUE)
 }
 
-output$data_dl_2024 <- downloadHandler(
-  filename = function() { "BC_WhirlingDisease_2024.xlsx" },
-  content = function(con) { create_wb_for_year("2024", con, dat) }
-)
 
-output$data_dl_2025 <- downloadHandler(
-  filename = function() { "BC_WhirlingDisease_2025.xlsx" },
-  content = function(con) { create_wb_for_year("2025", con, dat_2025) }
-)
 
+
+# output$data_dl_2024 <- downloadHandler(
+#   filename = function() { "BC_WhirlingDisease_2024.xlsx" },
+#   content = function(con) { create_wb_for_year("2024", con, dat) }
+# )
+# 
+# output$data_dl_2025 <- downloadHandler(
+#   filename = function() { "BC_WhirlingDisease_2025.xlsx" },
+#   content = function(con) { create_wb_for_year("2025", con, dat_2025) }
+# )
+
+pw_error <- reactiveVal(FALSE)
+
+
+observeEvent(input$data_dl_2024, {
+  pending_download("2024")
+  
+  showModal(modalDialog(
+    title = "Enter Password",
+    passwordInput("dl_password", "Password:", value = ""),
+    
+    if (pw_error()) {
+      div(style = "color:red;", "Incorrect password")
+    },
+    
+    footer = tagList(
+      modalButton("Cancel"),
+      actionButton("confirm_download", "Download", class = "btn btn-forest")
+    )
+  ))
+})
+
+observeEvent(input$data_dl_2025, {
+  pending_download("2025")
+  
+  showModal(modalDialog(
+    title = "Enter Password",
+    passwordInput("dl_password", "Password:", value = ""),
+    
+    if (pw_error()) {
+      div(style = "color:red;", "Incorrect password")
+    },
+    
+    footer = tagList(
+      modalButton("Cancel"),
+      actionButton("confirm_download", "Download", class = "btn btn-forest")
+    )
+  ))
+})
+
+observeEvent(input$confirm_download, {
+  if (input$dl_password == APP_PASSWORD) {
+    
+    pw_error(FALSE)  # reset error
+    removeModal()
+    
+    year <- pending_download()
+    tmp <- tempfile(fileext = ".xlsx")
+    
+    if (year == "2024") {
+      create_wb_for_year("2024", tmp, dat)
+      filename <- "2024_wd_data.xlsx"
+    } else {
+      create_wb_for_year("2025", tmp, dat_2025)
+      filename <- "2025_wd_data.xlsx"
+    }
+    
+    new_path <- file.path(dirname(tmp), filename)
+    file.rename(tmp, new_path)
+    
+    addResourcePath("tmpdownload", dirname(new_path))
+    runjs(sprintf(
+      "window.location.href = 'tmpdownload/%s';",
+      filename
+    ))
+    
+  } else {
+    
+    pw_error(TRUE)  # set error flag
+    
+    # re-show modal for same year
+    year <- pending_download()
+    
+    showModal(modalDialog(
+      title = "Enter Password",
+      passwordInput("dl_password", "Password:", value = ""),
+      
+      div(style = "color:red;", "Incorrect password"),
+      
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("confirm_download", "Download", class = "btn btn-forest")
+      )
+    ))
+  }
+})

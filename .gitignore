@@ -9,3 +9,9 @@ data/*
 test_app.R
 app/www/*.html
 *.xlsx
+-PF4X72HP.Rhistory
+<<<<<<< HEAD
+=======
+*.csv
+>>>>>>> a706a20d156ecedd9ff8163457ff7ac7d8f3dc93
+.positai

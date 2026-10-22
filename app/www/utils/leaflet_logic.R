@@ -174,52 +174,96 @@ marker_icons <- leaflet::iconList(
   
 )
 
+# make_leaf_tbl <- function(dat, type = c("Fish", "eDNA")) {
+#   
+#   type <- match.arg(type)
+#   
+#   dat_clean <- dat |> 
+#     dplyr::mutate(
+#       Latitude  = sf::st_coordinates(geom)[,2],
+#       Longitude = sf::st_coordinates(geom)[,1]
+#     ) |> 
+#     sf::st_drop_geometry() |> 
+#     dplyr::select(
+#       `Sample Site` = sample_site_name,
+#       Latitude,
+#       Longitude,
+#       `Sampling Method` = sampling_method,
+#       `Tot. Batches:` = as.numeric(max(batch_no)),
+#       `Fish Species Sampled` = fish_species_sampled,
+#       `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
+#       `eDNA Sampling Results (M. cerebralis – parasite)` = e_dna_results_mc,
+#       `Agency` = delivery_agency,
+#       `Date Collected` = date_collected,
+#       Year
+#     ) |> 
+#     
+#     # ---- Replace NA with blank ----
+#   dplyr::mutate(
+#     dplyr::across(everything(), ~ifelse(is.na(.), "", .))
+#   )
+#   
+#   # ---- Optionally drop irrelevant columns ----
+#   if (unique(dat_clean$`Sampling Method`) == "Fish") {
+#     dat_clean <- dat_clean |> 
+#       dplyr::select(-`eDNA Sampling Results (M. cerebralis – parasite)`)
+#   } else {
+#     dat_clean <- dat_clean |> 
+#       dplyr::select(-`Fish Species Sampled`,
+#                     - `Fish Sampling Results`)
+#   }
+#   
+#   
+#   
+#   # ---- Drop columns that are completely blank ----
+#   dat_clean <- dat_clean |> 
+#     dplyr::select(where(~any(trimws(as.character(.)) != "")))
+#   
+#   leafpop::popupTable(dat_clean)
+# }
+
 make_leaf_tbl <- function(dat, type = c("Fish", "eDNA")) {
   
   type <- match.arg(type)
   
-  dat_clean <- dat |> 
+  dat_clean <- dat %>%
     dplyr::mutate(
       Latitude  = sf::st_coordinates(geom)[,2],
       Longitude = sf::st_coordinates(geom)[,1]
-    ) |> 
-    sf::st_drop_geometry() |> 
+    ) %>%
+    sf::st_drop_geometry()
+  
+  # ---- Calculate Tot. Batches only for eDNA if batch_no exists ----
+  if (type == "eDNA" && "batch_no" %in% names(dat_clean)) {
+    dat_clean <- dat_clean %>%
+      dplyr::group_by(sample_site_name) %>%
+      dplyr::mutate(`No. Sampling Events:` = max(batch_no, na.rm = TRUE)) %>%
+      dplyr::ungroup()
+  }
+  
+  # ---- Keep all your existing nice names and column mappings ----
+  dat_clean <- dat_clean %>%
     dplyr::select(
       `Sample Site` = sample_site_name,
       Latitude,
       Longitude,
       `Sampling Method` = sampling_method,
+      dplyr::any_of("No. Sampling Events:"),
       `Fish Species Sampled` = fish_species_sampled,
       `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
       `eDNA Sampling Results (M. cerebralis – parasite)` = e_dna_results_mc,
       `Agency` = delivery_agency,
       `Date Collected` = date_collected,
       Year
-    ) |> 
-    
-    # ---- Replace NA with blank ----
-  dplyr::mutate(
-    dplyr::across(everything(), ~ifelse(is.na(.), "", .))
-  )
-  
-  # ---- Optionally drop irrelevant columns ----
-  if (unique(dat_clean$`Sampling Method`) == "Fish") {
-    dat_clean <- dat_clean |> 
-      dplyr::select(-`eDNA Sampling Results (M. cerebralis – parasite)`)
-  } else {
-    dat_clean <- dat_clean |> 
-      dplyr::select(-`Fish Species Sampled`,
-                    - `Fish Sampling Results`)
-  }
-  
-  
-  
-  # ---- Drop columns that are completely blank ----
-  dat_clean <- dat_clean |> 
+    )  %>%
+    # Replace NA with blank
+    dplyr::mutate(across(everything(), ~ifelse(is.na(.), "", .))) %>%
+    # Drop completely blank columns
     dplyr::select(where(~any(trimws(as.character(.)) != "")))
   
   leafpop::popupTable(dat_clean)
 }
+
 
 # --------------------------------------
 # Function to generate Leaflet for any data
@@ -244,10 +288,10 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
   
   # ---- Tables ----
   tbls <- list(
-    "2024" = make_leaf_tbl(dat %>% dplyr::filter(Year == 2024)),
-    "2025" = make_leaf_tbl(dat %>% dplyr::filter(Year == 2025))
+    "2024" = make_leaf_tbl(dat %>% dplyr::filter(Year == 2024), type = type),
+    "2025" = make_leaf_tbl(dat %>% dplyr::filter(Year == 2025), type = type)
   )
-  
+ 
   # ---- Base map ----
   m <- leaflet(dat) %>%
     addTiles() %>%
@@ -267,6 +311,34 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
       weight = 1.5,
       fill = "transparent",
       options = pathOptions(clickable = FALSE, pane = "boundaries")
+    ) %>%
+    addMapPane("emerald_lake_location", zIndex = 450) %>%
+    addPolygons(
+      data = emerald_ws,
+      color = "yellow",
+      weight = 1.5,
+      opacity = 0.6,
+      fill = "transparent",
+      
+      # ---- Hover text ----
+      label = ~WATERSHED_GROUP_NAME,
+      labelOptions = labelOptions(
+        direction = "auto",
+        textsize = "13px"
+      ),
+      
+      # ---- Click popup ----
+      popup = ~htmltools::HTML(
+        paste0(
+          "<strong>Watershed:</strong> ", WATERSHED_GROUP_NAME, "<br/>",
+          "<strong>Waterbody:</strong> Emerald Lake"
+        )
+      ),
+      
+      options = pathOptions(
+        clickable = TRUE,
+        pane = "emerald_lake_location"
+      )
     ) %>%
     addMapPane("points", zIndex = 500)
   
@@ -307,37 +379,60 @@ make_leaflet <- function(dat, type = c("Fish","eDNA"), leaflet_id) {
       title = paste(type, " Result"),
       opacity = 1
     ) %>%
+    
     addControl(
       year_legend,
       position = "bottomleft"
+    ) |> 
+    addLegend(
+      position = "bottomleft",
+      colors = "yellow",
+      labels = "First WD Detection",
+      title = "Emerald Lake Watershed",
+      opacity = 0.6
     )
 }
 
 make_leaf_tbl_both = function(dat){
   
+  
   dat_clean = dat %>% 
     dplyr::mutate(Latitude = sf::st_coordinates(geom)[,2],
                   Longitude = sf::st_coordinates(geom)[,1]) %>%
-    sf::st_drop_geometry() %>%
+    sf::st_drop_geometry()
+  
+  # ---- Calculate Tot. Batches only for eDNA if batch_no exists ----
+  if ("batch_no" %in% names(dat_clean)) {
+    dat_clean <- dat_clean %>%
+      dplyr::group_by(sample_site_name) %>%
+      dplyr::mutate(`No. Sampling Events:` = max(batch_no, na.rm = TRUE)) %>%
+      dplyr::ungroup()
+  }
+  
+  
+  
+  dat_clean = dat_clean %>%
     dplyr::select(
-                  `Year Sampled` = Year,
-                  `Sampling Method` = sampling_method,
-                  `Sample Site` = sample_site_name,
-                  Latitude,
-                  Longitude,,
-                  `Delivery Agency` = delivery_agency,
-                  `Fish Species Sampled` = fish_species_sampled,
-                  `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
-                  `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc
-                  ) %>%
+      `Year Sampled` = Year,
+      `Sampling Method` = sampling_method,
+      dplyr::any_of("No. Sampling Events:"),
+      `Sample Site` = sample_site_name,
+      Latitude,
+      Longitude,,
+      `Delivery Agency` = delivery_agency,
+      `Fish Species Sampled` = fish_species_sampled,
+      `Fish Sampling Results` = fish_sampling_results_q_pcr_mc_detected,
+      `eDNA Sampling Results (M. cerebralis - parasite)` = e_dna_results_mc,
+      `Date Collected` = date_collected
+    ) %>%
     dplyr::mutate(
       dplyr::across(everything(), ~ifelse(is.na(.), "", .))
     )
-    
+  
   dat_clean <- dat_clean |> 
     dplyr::select(where(~any(trimws(as.character(.)) != "")))
-    
-    leafpop::popupTable(dat_clean)
+  
+  leafpop::popupTable(dat_clean)
 }
 
 
@@ -406,6 +501,34 @@ make_all_years = function(dat, leaflet_id){
       fill = "transparent",
       options = pathOptions(clickable = FALSE, pane = "boundaries")
     ) %>%
+    addMapPane("emerald_lake_location", zIndex = 450) %>%
+    addPolygons(
+      data = emerald_ws,
+      color = "yellow",
+      weight = 1.5,
+      opacity = 0.6,
+      fill = "transparent",
+      
+      # ---- Hover text ----
+      label = ~WATERSHE_1,
+      labelOptions = labelOptions(
+        direction = "auto",
+        textsize = "13px"
+      ),
+      
+      # ---- Click popup ----
+      popup = ~htmltools::HTML(
+        paste0(
+          "<strong>Watershed:</strong> ", WATERSHE_1, "<br/>",
+          "<strong>Waterbody:</strong> Emerald Lake"
+        )
+      ),
+      
+      options = pathOptions(
+        clickable = TRUE,
+        pane = "emerald_lake_location"
+      )
+    ) %>%
     # Points for 2024
     addMapPane("points", zIndex = 500) %>%
     # addCircleMarkers(
@@ -457,9 +580,17 @@ make_all_years = function(dat, leaflet_id){
       title = paste(type, "Result"),
       opacity = 1
     ) |> 
+    
     addControl(
       year_legend,
       position = "bottomleft"
+    ) |> 
+    addLegend(
+      position = "bottomleft",
+      colors = "yellow",
+      labels = "First WD Detection",
+      title = "Emerald Lake Watershed",
+      opacity = 0.6
     )
   
 }
