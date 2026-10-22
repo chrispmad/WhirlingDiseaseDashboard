@@ -29,13 +29,14 @@ dat = read_excel('data/WD_sampling_results_fish_eDNA_used_for_making_maps_CMADSE
 dat = purrr::set_names(dat, snakecase::to_snake_case)
 
 dat <- dat |>
-  dplyr::mutate(date_collected = as.numeric(date_collected)) |> 
-  dplyr::mutate(
-    date_collected = dplyr::case_when(
-      is.numeric(date_collected) ~ as.Date(date_collected, origin = "1899-12-30"),
-      TRUE ~ as.Date(date_collected)
-    )
-  )
+  dplyr::mutate(date_collected = as.character(date_collected))
+# |> 
+#   dplyr::mutate(
+#     date_collected = dplyr::case_when(
+#       is.numeric(date_collected) ~ as.Date(date_collected, origin = "1899-12-30"),
+#       TRUE ~ as.Date(date_collected)
+#     )
+#   )
 
 dat = dat |> filter(!is.na(lat) & !is.na(long))
 
@@ -75,8 +76,12 @@ sf::write_sf(subw,'app/www/subwatershed_groups.gpkg')
 # -------------------------------
 
 
+wsg <- bcdc_query_geodata(
+  "freshwater-atlas-watershed-groups"
+) |>
+  collect()
 
-kicking_horse =  subw |> 
+kicking_horse =  wsg |> 
   filter(str_detect(WATERSHED_GROUP_NAME, regex("kicking horse", ignore_case = TRUE)))
 if(file.exists('app/www/emerald_lake_loc.gpkg')) file.remove('app/www/emerald_lake_loc.gpkg')
 sf::write_sf(kicking_horse, "app/www/emerald_lake_loc.gpkg")
